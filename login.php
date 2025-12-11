@@ -114,6 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <hr> 
             <p>Student Canteen Food Ordering</p>
             <p>Ordering System</p>
+            <p>Test</p>
         </div>
 
     </div>
