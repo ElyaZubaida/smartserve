@@ -1,0 +1,17 @@
+<!-- 
+ Frontend: Insyirah 
+ Backend: ? 
+ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Serve - Signup</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="style.css"> <!-- Link to your external CSS -->
+</head>
+<body>
+    <!-- Start code here -->
+</body>
+</html>
