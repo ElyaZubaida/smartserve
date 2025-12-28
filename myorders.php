@@ -37,5 +37,36 @@
     </header>
     
     <!-- Start code here -->
+      <!-- Orders Content -->
+    <div class="orders-container">
+        <div class="orders-title">
+            <h2>My Orders</h2>
+        </div>
+
+        <!-- Order 1 -->
+        <div class="order-card">
+            <div class="order-left">
+                <div class="order-number">Order No #1000</div>
+                <button class="order-status-btn">Order status</button>
+            </div>
+            <div class="order-right">
+                <button class="order-action-btn">Order details</button>
+                <button class="order-action-btn">Cancel order</button>
+            </div>
+        </div>
+
+        <!-- Order 2 -->
+        <div class="order-card">
+            <div class="order-left">
+                <div class="order-number">Order No #999</div>
+                <button class="order-status-btn">Order status</button>
+            </div>
+            <div class="order-right">
+                <button class="order-action-btn">Order details</button>
+                <button class="order-action-btn">Cancel order</button>
+            </div>
+        </div>
+    </div>
+    
 </body>
 </html>

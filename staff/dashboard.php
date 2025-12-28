@@ -36,6 +36,27 @@
     <!-- Main content area -->
     <div class="main-content">
         <!-- Start code here -->
+     <!-- Dashboard Content -->
+        <div class="dashboard-container">
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3>Today's Sale</h3>
+                    <div class="value">RM 1000.00</div>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Items</h3>
+                    <div class="value">30</div>
+                </div>
+                <div class="dashboard-card">
+                    <h3>New Orders</h3>
+                    <div class="value">3</div>
+                </div>
+                <div class="dashboard-card">
+                    <h3>Uncomplete</h3>
+                    <div class="value">2</div>
+                </div>
+            </div>
+        </div>
     </div>
     
 </body>
