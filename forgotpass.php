@@ -1,17 +1,33 @@
 <!-- 
  Frontend: Mina 
  Backend: ? 
- -->
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Serve - Forgot Password</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="style.css"> <!-- Link to your external CSS -->
+    <title>SmartServe - Forgot / Change Password</title>
+
+    <!-- Google Fonts Poppins -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <!-- Start code here -->
+<body class="staff-style-student-page">
+
+<div class="profile-card">
+    <h2>Change Password</h2>
+    <form>
+        <input type="text" class="input-field" placeholder="Username" required>
+        <input type="password" class="input-field" placeholder="New Password" required>
+        <input type="password" class="input-field" placeholder="Re-enter Password" required>
+
+        <button type="submit" class="btn-update">Update</button>
+    </form>
+</div>
+
+<footer>
+    <p>SmartServe - Student Canteen Food Ordering System</p>
+</footer>
 </body>
 </html>
