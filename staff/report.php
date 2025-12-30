@@ -7,46 +7,59 @@
     <link rel="stylesheet" href="sastyle.css">
     
     <style>
-        /* ADDITIONAL CSS - Report Page */
-        
-        /* Report Header */
+        body {
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin-left: 250px;
+        }
+
+        /* Report Header - CENTERED */
         .report-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             position: relative;
+            width: 100%;
+            max-width: 850px;
         }
 
         .report-title-box {
             background-color: white;
-            padding: 20px 40px;
-            border-radius: 20px;
+            padding: 12px 25px;
+            border-radius: 16px;
             display: inline-block;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .report-title-box h2 {
-            font-size: 32px;
+            font-size: 22px;
             font-weight: bold;
-            margin: 0 0 5px 0;
+            margin: 0 0 3px 0;
         }
 
         .report-title-box .report-date {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
             margin: 0;
         }
 
-        /* Export Button - Fixed position */
+        /* Export Button - POSITIONED */
         .export-btn {
             position: absolute;
-            right: 40px;
+            right: 0;
             top: 0;
             background-color: #000;
             color: white;
-            padding: 12px 40px;
-            border-radius: 25px;
+            padding: 8px 28px;
+            border-radius: 20px;
             border: none;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             text-decoration: none;
@@ -57,38 +70,41 @@
             background-color: #333;
         }
 
-        /* Filters Section - IN ONE LINE */
+        /* Filters Section - CENTERED */
         .filters-section {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-bottom: 18px;
+            width: 100%;
+            max-width: 850px;
         }
 
         .filter-dropdown {
-            padding: 12px 30px;
-            border-radius: 25px;
+            padding: 8px 20px;
+            border-radius: 20px;
             border: none;
             background-color: white;
-            font-size: 16px;
+            font-size: 13px;
             cursor: pointer;
-            min-width: 200px;
+            min-width: 150px;
         }
 
-        /* Report Table */
+        /* Report Table Container - CENTERED */
         .report-table-container {
             background-color: #d3d3d3;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 1000px;
-            margin: 0 auto;
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 850px;
         }
 
         .report-table {
             width: 100%;
             border-collapse: collapse;
             background-color: white;
+            table-layout: fixed;
         }
 
         .report-table thead {
@@ -96,13 +112,22 @@
         }
 
         .report-table th {
-            padding: 15px 10px;
+            padding: 10px 6px;
             text-align: center;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             color: #000;
             border: 1px solid #666;
+            word-wrap: break-word;
         }
+
+        /* Column Widths */
+        .report-table th:nth-child(1) { width: 8%; }
+        .report-table th:nth-child(2) { width: 10%; }
+        .report-table th:nth-child(3) { width: 16%; }
+        .report-table th:nth-child(4) { width: 12%; }
+        .report-table th:nth-child(5) { width: 36%; }
+        .report-table th:nth-child(6) { width: 12%; }
 
         .report-table tbody tr {
             background-color: #b8b8b8;
@@ -113,54 +138,77 @@
         }
 
         .report-table td {
-            padding: 15px 10px;
+            padding: 10px 6px;
             text-align: center;
-            font-size: 14px;
+            font-size: 12px;
             color: #000;
             border: 1px solid #666;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
+        /* Menu Image */
         .menu-picture {
-            width: 60px;
-            height: 60px;
-            font-size: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 45px;
+            height: 45px;
             margin: 0 auto;
+            overflow: hidden;
+            border-radius: 50%;
+            background-color: white;
+        }
+
+        .menu-picture img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .menu-description {
-            font-size: 12px;
-            line-height: 1.4;
+            font-size: 10px;
+            line-height: 1.3;
+            text-align: left;
+            padding: 6px;
         }
 
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 40px;
+            padding: 25px;
             color: #666;
+            font-size: 13px;
         }
 
         /* Responsive */
+        @media (max-width: 1200px) {
+            .report-table {
+                font-size: 11px;
+            }
+            
+            .menu-picture {
+                width: 38px;
+                height: 38px;
+            }
+        }
+
         @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+                margin-left: 0;
+            }
+
             .export-btn {
                 position: static;
                 display: block;
-                margin: 20px auto 0;
+                margin: 12px auto 0;
             }
 
             .filters-section {
                 flex-direction: column;
             }
 
-            .report-table {
-                font-size: 12px;
-            }
-
-            .report-table th,
-            .report-table td {
-                padding: 8px 5px;
+            .report-table th:nth-child(5),
+            .report-table td:nth-child(5) {
+                display: none;
             }
         }
     </style>
@@ -191,34 +239,30 @@
         // Database connection
         include('../databaseconnect.php');
 
-        // Check connection
         if (!$connection) {
-            echo '<div style="color: red; text-align: center;">❌ Database connection failed!</div>';
+            echo '<div style="color: red; text-align: center; font-size: 13px;">❌ Database connection failed!</div>';
             exit;
         }
 
-        // Get filter values
         $filter_type = isset($_GET['type']) ? $_GET['type'] : '';
         $filter_category = isset($_GET['category']) ? $_GET['category'] : '';
         $filter_order_type = isset($_GET['order_type']) ? $_GET['order_type'] : '';
 
-        // Build query
         $query = "SELECT menu_id, name, price, description, image FROM menu WHERE 1=1";
         $result = mysqli_query($connection, $query);
         ?>
 
-        <!-- Report Header -->
+        <!-- Report Header - CENTERED -->
         <div class="report-header">
             <div class="report-title-box">
                 <h2>Report</h2>
                 <p class="report-date">Date: <?php echo date('d/m/Y'); ?></p>
             </div>
             
-            <!-- Export Button -->
-            <a href="export_report.php" class="export-btn">Export</a>
+            <a href="export_report.php" class="export-btn" target="_blank">Export</a>
         </div>
 
-        <!-- Filters Section - IN ONE LINE -->
+        <!-- Filters Section - CENTERED -->
         <form method="GET" action="">
             <div class="filters-section">
                 <select name="type" class="filter-dropdown" onchange="this.form.submit()">
@@ -246,7 +290,7 @@
             </div>
         </form>
 
-        <!-- Report Table -->
+        <!-- Report Table - CENTERED -->
         <div class="report-table-container">
             <table class="report-table">
                 <thead>
@@ -261,18 +305,6 @@
                 </thead>
                 <tbody>
                     <?php
-                    // Menu emojis mapping
-                    $item_emojis = [
-                        'nasi lemak' => '🍚',
-                        'roti canai' => '🫓',
-                        'mee goreng' => '🍜',
-                        'teh tarik' => '🧋',
-                        'teh o ais' => '🧋',
-                        'nasi goreng' => '🍛',
-                        'default' => '🍽️'
-                    ];
-
-                    // Determine menu type
                     function getMenuType($name) {
                         $name_lower = strtolower($name);
                         if (strpos($name_lower, 'teh') !== false || strpos($name_lower, 'ais') !== false) {
@@ -283,22 +315,20 @@
 
                     if (!$result || mysqli_num_rows($result) == 0) {
                         echo "<tr><td colspan='6'>";
-                        echo "<div class='empty-state'>";
-                        echo "<h3>No menu items found</h3>";
-                        echo "<p>Add menu items to see reports.</p>";
-                        echo "</div>";
+                        echo "<div class='empty-state'>No menu items found</div>";
                         echo "</td></tr>";
                     } else {
                         $menu_id_counter = 1;
                         while($row = mysqli_fetch_assoc($result)) {
-                            $item_name_lower = strtolower($row['name']);
-                            $emoji = $item_emojis[$item_name_lower] ?? $item_emojis['default'];
                             $menu_type = getMenuType($row['name']);
+                            $image_path = !empty($row['image']) ? '../img/' . $row['image'] : '../img/default-food.jpg';
                     ?>
                     <tr>
                         <td><?php echo str_pad($menu_id_counter++, 3, '0', STR_PAD_LEFT); ?></td>
                         <td>
-                            <div class="menu-picture"><?php echo $emoji; ?></div>
+                            <div class="menu-picture">
+                                <img src="<?php echo htmlspecialchars($image_path); ?>" alt="<?php echo htmlspecialchars($row['name']); ?>" onerror="this.src='../img/default-food.jpg'">
+                            </div>
                         </td>
                         <td><?php echo htmlspecialchars($row['name']); ?></td>
                         <td><?php echo $menu_type; ?></td>

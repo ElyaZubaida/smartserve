@@ -7,23 +7,54 @@
     <link rel="stylesheet" href="sastyle.css">
     
     <style>
-        /* ADDITIONAL CSS - Specific untuk Order Management page */
-        
-        /* Orders Table Styles */
+        body {
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin-left: 250px;
+        }
+
+        /* Header - CENTERED */
+        header {
+            background-color: #f0f0f0;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 8px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            color: #333;
+            margin: 0;
+        }
+
+        /* Orders Container - CENTERED */
         .orders-container {
-            margin-top: 30px;
-            overflow-x: auto;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: center;
         }
 
         .orders-table {
             width: 100%;
             max-width: 900px;
-            margin: 0 auto;
             border-collapse: collapse;
             background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
             overflow: hidden;
+            table-layout: fixed;
         }
 
         .orders-table thead {
@@ -31,13 +62,19 @@
         }
 
         .orders-table th {
-            padding: 15px;
+            padding: 12px 10px;
             text-align: center;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #333;
             border-bottom: 2px solid #ddd;
         }
+
+        /* Column widths - BALANCED */
+        .orders-table th:nth-child(1) { width: 10%; }
+        .orders-table th:nth-child(2) { width: 40%; }
+        .orders-table th:nth-child(3) { width: 28%; }
+        .orders-table th:nth-child(4) { width: 22%; }
 
         .orders-table tbody tr {
             background-color: #b8c5d6;
@@ -49,18 +86,19 @@
         }
 
         .orders-table td {
-            padding: 15px;
+            padding: 12px 10px;
             text-align: center;
-            font-size: 16px;
+            font-size: 14px;
             color: #333;
+            word-wrap: break-word;
         }
 
-        /* Status Badge Styles */
+        /* Status Badge */
         .status-badge {
-            padding: 5px 15px;
-            border-radius: 5px;
+            padding: 5px 12px;
+            border-radius: 4px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             display: inline-block;
         }
 
@@ -89,14 +127,14 @@
             background-color: #e8f5e9;
         }
 
-        /* View Button Styles */
+        /* View Button */
         .view-btn {
             background-color: #333;
             color: white;
-            padding: 8px 20px;
-            border-radius: 5px;
+            padding: 7px 18px;
+            border-radius: 4px;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             display: inline-block;
             transition: background-color 0.3s ease;
         }
@@ -109,34 +147,44 @@
         .error-message {
             background-color: #ffebee;
             color: #c62828;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px auto;
-            max-width: 900px;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
             text-align: center;
+            font-size: 13px;
+            max-width: 900px;
         }
 
         /* Empty State */
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 15px;
             color: #666;
         }
 
         .empty-state h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
+            font-size: 16px;
+            margin-bottom: 8px;
         }
 
-        /* Responsive Design */
+        .empty-state p {
+            font-size: 13px;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+                margin-left: 0;
+            }
+
             .orders-table {
-                font-size: 14px;
+                font-size: 12px;
             }
             
             .orders-table th,
             .orders-table td {
-                padding: 10px 5px;
+                padding: 8px 5px;
             }
         }
     </style>
@@ -177,10 +225,7 @@
             if (!$connection) {
                 echo '<div class="error-message">';
                 echo '❌ Database connection failed: ' . mysqli_connect_error();
-                echo '<br><br>Please check:';
-                echo '<br>1. MySQL is running in Laragon';
-                echo '<br>2. Database "smartserve" exists';
-                echo '<br>3. Database credentials are correct';
+                echo '<br>Please check database settings.';
                 echo '</div>';
                 exit;
             }
