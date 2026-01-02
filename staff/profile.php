@@ -34,6 +34,20 @@
             </nav>
         </div>
     </div>
+    <nav class="sidebar-nav">
+        <ul>
+            <li><a href="dashboard.php">Dashboard</a></li>
+            <li><a href="menu_management.php">Menu Management</a></li>
+            <li><a href="order_management.php">Order Management</a></li>
+            <li><a href="report.php">Reports</a></li>
+            <li><a href="profile.php">My Profile</a></li>
+            <li><a href="../logout.php">Log Out</a></li>
+        </ul>
+    </nav>
+</div>
+
+<!-- ================= MAIN CONTENT ================= -->
+<div class="main-content">
 
     <!-- Main content area -->
     <div class="main-content">
@@ -50,6 +64,12 @@
             </form>
         </div>
     </div>
-    
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+        <p>SmartServe - Staff Portal</p>
+    </footer>
+</div>
+
 </body>
 </html>

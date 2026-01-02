@@ -496,3 +496,115 @@ body{
     background-color: #45a049;
 }
 
+/* ============================
+   STUDENT PROFILE / FORGOT PASS
+   ============================ */
+
+/* Import Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Pastikan semua teks guna Poppins */
+body,
+input,
+button,
+textarea,
+select,
+h1, h2, h3, h4, h5, h6,
+p, a, label {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Page background */
+.staff-style-student-page {
+    background-color: #f0f4f0; /* soft neutral green */
+    min-height: 100vh;
+    padding: 100px 20px 40px 20px; /* top padding supaya tak overlap menubar */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* start dari atas */
+    flex-direction: column;
+}
+
+/* Card style (profile & forgot pass) */
+.profile-card, .forgot-card {
+    width: 100%;
+    max-width: 450px;
+    background-color: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    margin: 0 auto 50px; /* center + spacing bawah */
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.profile-card:hover, .forgot-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+/* Card Title */
+.profile-card h2, .forgot-card h2 {
+    font-size: 26px;
+    font-weight: 600;
+    color: #1b5e20;
+    margin-bottom: 25px;
+}
+
+/* Inputs */
+.input-field {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 18px;
+    border: 1px solid #c8e6c9;
+    border-radius: 8px;
+    font-size: 15px;
+    color: #1b5e20;
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    border-color: #388e3c;
+    box-shadow: 0 0 5px rgba(56,142,60,0.3);
+    outline: none;
+}
+
+/* Button */
+.btn-update {
+    width: 100%;
+    padding: 12px;
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-update:hover {
+    background-color: #1b5e20;
+    transform: scale(1.03);
+}
+
+footer {
+    width: 100%;
+    margin-top: 20px;
+    text-align: center;
+    color: #1b5e20;
+    font-size: 14px;
+    padding: 15px 0;        /* tinggi footer */
+    background-color: #eaf5ea; /* optional, soft green */
+}
+
+
+
+/* Responsive */
+@media screen and (max-width: 480px) {
+    .profile-card {
+        width: 95%;
+        padding: 25px;
+    }
+}
