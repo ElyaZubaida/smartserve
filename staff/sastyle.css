@@ -357,6 +357,9 @@ button.delete-btn:hover {
     margin-bottom: 10px;
 }
 
+/* ============================
+        PROFILE PAGE
+   ============================ */
 .staff-profile-page {
     background-color: #f0f4f0; /* soft neutral green */
     min-height: 80vh;

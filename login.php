@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"> 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,76 +48,92 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body class="login-page">
 
-    <!-- Smart Serve Logo -->
     <header>
         <div class="logo">
-            <img src="logo.png" alt="Smart Serve Logo"> <!-- Replace with your logo image -->
+            <img src="img/logo.png" alt="Smart Serve Logo">
             <h1>SmartServe</h1>
         </div>
-        <hr> <!-- Separator line -->
+        <hr>
     </header>
 
-    <!-- Main Container for the Login Page -->
     <div class="container">
-        
-        <!-- Left side: Login Form -->
         <div class="login-container">
             <div class="login-form">
                 <h2>Log In</h2>
 
-                <!-- Display error message if login fails -->
                 <?php if (isset($error_message)): ?>
-                    <p class="error-message"><?php echo $error_message; ?></p>
+                    <p class="error-message"><span class="material-icons">error_outline</span> <?php echo $error_message; ?></p>
                 <?php endif; ?>
 
-                <!-- Login Form Fields -->
                 <form action="login.php" method="POST">
                     <div class="role-selection">
-                        <label>
-                            <input type="radio" name="role" value="student" id="student" checked>
-                            Student
+                        <label class="role-pill">
+                            <input type="radio" name="role" value="student" checked>
+                            <span>Student</span>
                         </label>
-                        <label>
-                            <input type="radio" name="role" value="staff" id="staff">
-                            Staff
+                        <label class="role-pill">
+                            <input type="radio" name="role" value="staff">
+                            <span>Staff</span>
                         </label>
                     </div>
 
-                    <div class="input-field">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" name="username" required>
-                    </div>
-                    <div class="input-field">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required>
+                    <div class="styled-input">
+                        <span class="material-icons">person</span>
+                        <input type="text" id="username" name="username" placeholder="Username" required>
                     </div>
 
-                    <!-- Forgot Password Link (aligned right) -->
+                    <div class="styled-input">
+                        <span class="material-icons">lock</span>
+                        <input type="password" id="password" name="password" placeholder="Password" required>
+                    </div>
+                    
                     <div class="forgot-password">
                         <a href="forgotpass.php">Forgot Password?</a>
                     </div>
 
-                    <!-- Login Button -->
                     <button type="submit" class="login-btn">Log In</button>
                 </form>
 
-                <!-- Sign Up Link (centered) -->
-                <div class="sign-up">
+                <div class="sign-up" id="signup-section">
                     <p>Don't have an account? <a href="signup.php">Sign Up</a></p>
                 </div>
             </div>
         </div>
 
-        <!-- Right side: Welcome Section -->
         <div class="welcome-container">
-            <h2>Welcome to SmartServe</h2>
-            <hr> 
-            <p>Student Canteen Food Ordering</p>
-            <p>Ordering System</p>
-            <p>Test</p>
+            <div class="welcome-badge">
+                <span class="material-icons">restaurant</span>
+            </div>
+            <h2>Welcome to <br>SmartServe</h2>
+            <div class="leaf-divider">
+                <span></span>
+                <span class="material-icons">eco</span>
+                <span></span>
+            </div>
+            <p>Student Canteen Food Ordering System</p>
         </div>
-
     </div>
-
 </body>
+<script>
+    const studentRadio = document.querySelector('input[value="student"]');
+    const staffRadio = document.querySelector('input[value="staff"]');
+    const signupSection = document.getElementById('signup-section');
+
+    // Function to toggle visibility
+    function toggleSignup() {
+        if (staffRadio.checked) {
+            signupSection.style.display = 'none'; // Hide if Staff
+        } else {
+            signupSection.style.display = 'block'; // Show if Student
+        }
+    }
+
+    // Listen for clicks on the radio buttons
+    studentRadio.addEventListener('change', toggleSignup);
+    staffRadio.addEventListener('change', toggleSignup);
+
+    // Run once on page load to ensure correct state
+    toggleSignup();
+</script>
 </html>
+

@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Serve - Menu Details</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
@@ -17,58 +17,63 @@
     <header>
         <div class="menubar">
             <div class="logo">
-                <img src="logo.png" alt="Smart Serve Logo"> <!-- Replace with your logo image -->
+                <img src="img/logo.png" alt="Smart Serve Logo">
             </div>
+
             <nav>
                 <ul>
-                    <li><a href="menu.php">Home</a></li>
-                    <li><a href="myorders.php">My Orders</a></li>
-                    <li><a href="cart.php">Cart</a></li>
-                    <li><a href="profile.php">Profile</a></li>
-                    <li><a href="logout.php">Logout</a></li>
+                    <li><a href="menu.php"><span class="material-symbols-outlined">home</span> Home</a></li>
+                    <li><a href="ai.php"><span class="material-symbols-outlined">psychology</span> Food Recomendation</a></li>
+                    <li><a href="myorders.php"><span class="material-symbols-outlined">receipt_long</span> Orders</a></li>
+                    <li><a href="cart.php"><span class="material-symbols-outlined">shopping_cart</span> Cart</a></li>
+                    <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
+                    <li><a href="logout.php"><span class="material-symbols-outlined">logout</span></a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
     <!-- Menu Details Section -->
-    <section class="menu-details">
-        <div class="menu-info">
+    <div class="details-container">
+        <div class="orders-title">
             <h2>Menu Details</h2>
-
-            <!-- Static Data for Menu Item -->
-            <div class="food-image">
+        </div>
+        
+        <section class="menu-details-card">
+            
+            <div class="details-image-section">
                 <img src="img/nasilemak.jpg" alt="Nasi Lemak">
             </div>
 
-            <div class="food-description">
-                <p><strong>Name:</strong> Nasi Lemak</p>
-                <p><strong>Price:</strong> RM 5.00</p>
-                <p><strong>Description:</strong> Yum yum yummy nasi lemak</p>
-            </div>
+            <div class="details-info-section">
+                <div class="food-header">
+                    <h1>Nasi Lemak</h1>
+                    <span class="food-price-tag">RM 5.00</span>
+                </div>
+                
+                <p class="food-desc">Yum yum yummy nasi lemak served with our special sambal.</p>
 
-            <!-- Quantity and Request -->
-            <div class="food-quantity">
-                <p><strong>Request:</strong> <input type="text" placeholder="Any special request?"></p>
-                <div class="quantity-controls">
-                    <button class="decrease">-</button>
-                    <input type="number" id="quantity" value="1" min="1" max="99">
-                    <button class="increase">+</button>
+                <div class="order-options">
+                    <div class="input-group">
+                        <label><span class="material-symbols-outlined">notes</span> Special Request</label>
+                        <input type="text" placeholder="Any special request?">
+                    </div>
+
+                    <div class="qty-and-cart">
+                        <div class="quantity-controls-modern">
+                            <button class="qty-btn decrease">-</button>
+                            <input type="number" id="quantity" value="1" readonly>
+                            <button class="qty-btn increase">+</button>
+                        </div>
+                        
+                        <button class="btn-add-to-cart" onclick="location.href='cart.php'">
+                            <span class="material-symbols-outlined">shopping_cart</span> Add to Cart
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <!-- Add to Cart Button -->
-            <div class="add-to-cart">
-                <button class="btn-add-to-cart"><a href="cart.php">Add to Cart</button></a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer Section -->
-    <footer>
-        <p>SmartServe - Student Canteen Food Ordering System</p>
-    </footer>
-
+        </section>
+    </div>
     <script>
         // Quantity adjustment functionality
         const decreaseButton = document.querySelector('.decrease');
