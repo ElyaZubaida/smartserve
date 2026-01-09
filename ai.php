@@ -1,3 +1,7 @@
+<!-- 
+ Frontend: Elya 
+ Backend: Elya 
+ -->
 <?php
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
@@ -55,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <header>
         <div class="menubar">
             <div class="logo">
-                <img src="logo.png" alt="Smart Serve Logo">
+                <img src="img/logo.png" alt="Smart Serve Logo">
             </div>
             <nav>
                 <ul>

@@ -1,6 +1,6 @@
 <!-- 
  Frontend: Elya 
- Backend: ? 
+ Backend: Qis 
  -->
 <?php
 session_start();
@@ -101,9 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
 
         <div class="welcome-container">
-            <div class="welcome-badge">
-                <span class="material-icons">restaurant</span>
-            </div>
+            <img src="img/logo.png" alt="Smart Serve Logo" style="width: 100px; height: 100px;">
             <h2>Welcome to <br>SmartServe</h2>
             <div class="leaf-divider">
                 <span></span>
@@ -118,22 +116,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     const studentRadio = document.querySelector('input[value="student"]');
     const staffRadio = document.querySelector('input[value="staff"]');
     const signupSection = document.getElementById('signup-section');
+    // Get the Forgot Password container
+    const forgotPasswordLink = document.querySelector('.forgot-password');
 
-    // Function to toggle visibility
     function toggleSignup() {
         if (staffRadio.checked) {
-            signupSection.style.display = 'none'; // Hide if Staff
+            signupSection.style.display = 'none';    // Hide Sign Up for Staff
+            forgotPasswordLink.style.display = 'none'; // Hide Forgot Password for Staff
         } else {
-            signupSection.style.display = 'block'; // Show if Student
+            signupSection.style.display = 'block';   // Show for Students
+            forgotPasswordLink.style.display = 'block'; 
         }
     }
 
-    // Listen for clicks on the radio buttons
     studentRadio.addEventListener('change', toggleSignup);
     staffRadio.addEventListener('change', toggleSignup);
 
-    // Run once on page load to ensure correct state
-    toggleSignup();
+    toggleSignup(); // Run on load
 </script>
 </html>
 

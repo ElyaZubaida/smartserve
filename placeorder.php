@@ -1,3 +1,7 @@
+<!-- 
+ Frontend: Insyirah 
+ Backend: ? 
+ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -69,7 +73,7 @@
                 <form action="orderdetails.php" method="POST" class="order-final-form">
                     <div class="pickup-box">
                         <div class="icon-label">
-                            <span class="material-icons">schedule</span>
+                            <span class="material-symbols-outlined">schedule</span>
                             <label>When will you pick this up?</label>
                         </div>
                         <select name="pickup_time" class="pickup-select-styled" required>

@@ -1,3 +1,7 @@
+<!-- 
+ Frontend: Elya 
+ Backend: Aleesya 
+ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,7 +37,7 @@
             <h1>Order Details</h1>
         </div>
         <div class="back-nav">
-            <a href="myorders.php"><span class="material-symbols-outlined">arrow_back</span> Back to My Orders</a>
+            <a href="myorders.php"><span class="material-symbols-outlined">arrow_back</span> My Orders</a>
         </div>
 
         <div class="details-main-card">
@@ -98,10 +102,6 @@
                             <strong>Location</strong>
                             <p>Dataran Cendekia</p>
                         </div>
-                    </div>
-                    <div class="qr-placeholder">
-                        <span class="material-symbols-outlined">qr_code_2</span>
-                        <p>Show this code to collect</p>
                     </div>
                 </div>
             </div>

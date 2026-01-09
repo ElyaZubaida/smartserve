@@ -1,3 +1,5 @@
+#-- Backend: Elya 
+
 from flask import Flask, jsonify, request
 import pandas as pd
 import numpy as np
@@ -6,7 +8,7 @@ from sklearn.preprocessing import LabelEncoder
 
 app = Flask(__name__)
 
-# 1. Expanded Dummy Data
+# 1. Dummy Data
 food_data = [
     {"name": "Nasi Lemak", "food_type": "Rice", "meal_type": "Breakfast", "cuisine": "Malay", "taste": "Savoury", "price": 5.00},
     {"name": "Fried Rice", "food_type": "Rice", "meal_type": "Lunch", "cuisine": "Chinese", "taste": "Spicy", "price": 6.50},
