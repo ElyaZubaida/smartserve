@@ -10,6 +10,213 @@
     <title>SmartServe - Staff Report</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="sastyle.css">
+    
+    <style>
+        body {
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin-left: 250px;
+        }
+
+        /* Report Header - CENTERED */
+        .report-header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            width: 100%;
+            max-width: 850px;
+        }
+
+        .report-title-box {
+            background-color: white;
+            padding: 12px 25px;
+            border-radius: 16px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .report-title-box h2 {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 0 0 3px 0;
+        }
+
+        .report-title-box .report-date {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        /* Export Button - POSITIONED */
+        .export-btn {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background-color: #000;
+            color: white;
+            padding: 8px 28px;
+            border-radius: 20px;
+            border: none;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .export-btn:hover {
+            background-color: #333;
+        }
+
+        /* Filters Section - CENTERED */
+        .filters-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            width: 100%;
+            max-width: 850px;
+        }
+
+        .filter-dropdown {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: none;
+            background-color: white;
+            font-size: 13px;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        /* Report Table Container - CENTERED */
+        .report-table-container {
+            background-color: #d3d3d3;
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 850px;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            table-layout: fixed;
+        }
+
+        .report-table thead {
+            background-color: #888;
+        }
+
+        .report-table th {
+            padding: 10px 6px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+            border: 1px solid #666;
+            word-wrap: break-word;
+        }
+
+        /* Column Widths */
+        .report-table th:nth-child(1) { width: 8%; }
+        .report-table th:nth-child(2) { width: 10%; }
+        .report-table th:nth-child(3) { width: 16%; }
+        .report-table th:nth-child(4) { width: 12%; }
+        .report-table th:nth-child(5) { width: 36%; }
+        .report-table th:nth-child(6) { width: 12%; }
+
+        .report-table tbody tr {
+            background-color: #b8b8b8;
+        }
+
+        .report-table tbody tr:nth-child(even) {
+            background-color: #c8c8c8;
+        }
+
+        .report-table td {
+            padding: 10px 6px;
+            text-align: center;
+            font-size: 12px;
+            color: #000;
+            border: 1px solid #666;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Menu Image */
+        .menu-picture {
+            width: 45px;
+            height: 45px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 50%;
+            background-color: white;
+        }
+
+        .menu-picture img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .menu-description {
+            font-size: 10px;
+            line-height: 1.3;
+            text-align: left;
+            padding: 6px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 25px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .report-table {
+                font-size: 11px;
+            }
+            
+            .menu-picture {
+                width: 38px;
+                height: 38px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+                margin-left: 0;
+            }
+
+            .export-btn {
+                position: static;
+                display: block;
+                margin: 12px auto 0;
+            }
+
+            .filters-section {
+                flex-direction: column;
+            }
+
+            .report-table th:nth-child(5),
+            .report-table td:nth-child(5) {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
