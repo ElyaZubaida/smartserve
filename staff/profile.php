@@ -50,7 +50,13 @@
 <div class="main-content">
 
     <!-- Main content area -->
-    <div class="main-content">
+    <div class="main-content profile-content">
+        <div class="header">
+            <div class="title">
+                <h2>Profile</h2>
+                <p>Manage your profile information</p>
+            </div>
+        </div>
         <div class="staff-profile-page">
         <div class="profile-card">
             <h2>My Profile</h2>
@@ -72,4 +78,5 @@
 </div>
 
 </body>
+
 </html>
