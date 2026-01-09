@@ -1,0 +1,12 @@
+# Ignore the virtual environment folder
+venv/
+.venv/
+env/
+
+# Ignore Python cache files (speeds up your project)
+__pycache__/
+*.py[cod]
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db

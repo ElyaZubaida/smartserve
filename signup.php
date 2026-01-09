@@ -1,3 +1,7 @@
+<!-- 
+ Frontend: Insyirah 
+ Backend: Qis 
+ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,10 +12,13 @@
 </head>
 <body class="signup-page">
     <!-- Header -->
-    <div class="signup-header">
-        <img src="logo.png" alt="Smart Serve Logo">
-        <h1>SMART SERVE</h1>
-    </div>
+    <header>
+        <div class="logo">
+            <img src="img/logo.png" alt="Smart Serve Logo"> <!-- Replace with your logo image -->
+            <h1>SmartServe</h1>
+        </div>
+        <hr> <!-- Separator line -->
+    </header>
 
     <!-- Sign Up Form -->
     <div class="signup-container">
