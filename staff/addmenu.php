@@ -36,34 +36,81 @@
     </div>
 
     <!-- Main content area -->
-    <div class="main-content">
-        <h2>Add Menu</h2>
-
-        <!-- Add Menu Form -->
-        <form id="addForm" method="POST" enctype="multipart/form-data">
-            <div class="menu-item-image">
-                <img id="menuItemImage" src="img/placeholder.jpg" alt="Menu Image" class="menu-item-img">
-                <input type="file" name="image" id="image" class="file-input" accept="image/*" required>
-            </div>
-
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" placeholder="Enter menu name" required>
-
-            <label for="description">Description:</label>
-            <textarea id="description" name="description" placeholder="Enter menu description" required></textarea>
-
-            <label for="price">Price (RM):</label>
-            <input type="number" id="price" name="price" placeholder="Enter menu price" required>
-
-            <label for="availability">Availability:</label>
-            <select id="availability" name="availability" required>
-                <option value="Available">Available</option>
-                <option value="Out of Stock">Out of Stock</option>
-            </select>
-
-            <button type="submit" name="add_menu" class="update-btn">Add Menu</button>
-        </form>
+    <div class="main-content staff-menu-content">
+    <div class="staff-menu-header">
+        <div class="staff-menu-title">
+            <h2>Add New Menu Item</h2>
+            <p>Create a new food item for the canteen system</p>
+        </div>
+        <a href="menu_management.php" class="staff-menu-add-btn" style="background-color: #666;">
+            <span class="material-symbols-outlined">arrow_back</span> Back to List
+        </a>
     </div>
 
+    <div class="update-form-container">
+        <form id="addForm" method="POST" enctype="multipart/form-data" class="staff-update-form">
+            <div class="form-grid">
+                
+                <div class="image-upload-section">
+                    <div class="menu-item-image">
+                        <img id="menuItemImage" src="../img/placeholder.jpg" alt="Menu Preview" class="menu-item-img">
+                    </div>
+                    <label class="file-upload-label">
+                        <span class="material-symbols-outlined">add_a_photo</span> Upload Product Image
+                        <input type="file" name="image" id="image" class="file-input" accept="image/*" required onchange="previewImage(event)">
+                    </label>
+                    <p style="font-size: 12px; color: #888; margin-top: 10px;">Recommended size: 800x600px</p>
+                </div>
+
+                <div class="form-inputs">
+                    <div class="input-group">
+                        <label for="name">Food Name</label>
+                        <input type="text" id="name" name="name" placeholder="e.g., Nasi Lemak Ayam" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" placeholder="Describe the ingredients or taste..." required></textarea>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="price">Price (RM)</label>
+                            <input type="number" step="0.01" id="price" name="price" placeholder="0.00" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="availability">Initial Availability</label>
+                            <select id="availability" name="availability" required>
+                                <option value="Available" selected>Available</option>
+                                <option value="Out of Stock">Out of Stock</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" name="add_menu" class="update-confirm-btn" style="background-color: #007bff;">
+                            Add Menu 
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Live preview function so staff can see the image before saving
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var output = document.getElementById('menuItemImage');
+            output.src = reader.result;
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>
+
 </body>
+
 </html>

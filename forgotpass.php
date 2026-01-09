@@ -13,7 +13,14 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="staff-style-student-page">
+<body>
+    <header>
+        <div class="logo">
+            <img src="img/logo.png" alt="Smart Serve Logo">
+            <h1>SmartServe</h1>
+        </div>
+        <hr>
+    </header>
 
 <div class="profile-card">
     <h2>Change Password</h2>

@@ -36,31 +36,56 @@
     </div>
 
      <!-- Main Content -->
-    <div class="main-content">
-        <main>
-            <h2>Menu</h2>
-            <button class="add-menu-item"><a href="addmenu.php?id=1">Add</button></a> <!-- Button to add menu items -->
-            <div class="menu-items">
-                <!-- Link each menu item to a page to update/delete -->
-                <a href="updatemenu.php?id=1" class="menu-item">
-                    <img src="../img/nasilemak.jpg" alt="Nasi Lemak">
-                    <div class="menu-item-details">
-                        <h3>Name: Nasi Lemak</h3>
-                        <p>Description: Yum yum yummy nasi lemak</p>
-                        <p>Price: RM 5.00</p>
-                    </div>
-                </a>
-                <a href="editmenu.php?id=2" class="menu-item">
-                    <img src="../img/meegoreng.jpg" alt="Mee Goreng">
-                    <div class="menu-item-details">
-                        <h3>Name: Mee Goreng</h3>
-                        <p>Description: Yum yum yummy mee goreng</p>
-                        <p>Price: RM 4.50</p>
-                    </div>
-                </a>
-                <!-- Add more menu items as needed -->
+    <div class="main-content staff-menu-content">
+    <main>
+        <div class="header">
+            <div class="title">
+                <h2>Menu Management</h2>
+                <p>Manage menu items and availability</p>
             </div>
-        </main>
-    </div>
+            <a href="addmenu.php" class="staff-menu-add-btn">
+                <span class="material-symbols-outlined">add_box</span>
+                Add Menu
+            </a>
+        </div>
+
+        <div class="staff-menu-grid">
+            <div class="staff-menu-card">
+                <div class="staff-menu-img">
+                    <img src="../img/nasilemak.jpg" alt="Nasi Lemak">
+                </div>
+                <div class="staff-menu-details">
+                    <span class="staff-menu-category">Rice</span>
+                    <h3>Nasi Lemak</h3>
+                    <p>Yum yum yummy nasi lemak</p>
+                    <div class="staff-menu-footer">
+                        <span class="staff-menu-price">RM 5.00</span>
+                        <div class="staff-menu-actions">
+                            <a href="updatemenu.php?id=1" class="staff-menu-edit"><span class="material-symbols-outlined">edit</span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="staff-menu-card">
+                <div class="staff-menu-img">
+                    <img src="../img/meegoreng.jpg" alt="Mee Goreng">
+                </div>
+                <div class="staff-menu-details">
+                    <span class="staff-menu-category">Noodles</span>
+                    <h3>Mee Goreng</h3>
+                    <p>Yum yum yummy mee goreng</p>
+                    <div class="staff-menu-footer">
+                        <span class="staff-menu-price">RM 4.50</span>
+                        <div class="staff-menu-actions">
+                            <a href="editmenu.php?id=2" class="staff-menu-edit"><span class="material-symbols-outlined">edit</span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
 </body>
+
 </html>
