@@ -145,7 +145,7 @@ header .logo img {
     cursor: pointer;
 }
 
-header .logo img:hover { transform: scale(1.1); }
+header .logo h1 span { color: #a5d6a7; }
 
 header h1 {
     font-size: 36px;
@@ -896,8 +896,8 @@ body.signup-page {
    ============================ */
 
 .cart-container {
-    margin-top: 40px;
-    padding: 40px;
+    padding: 60px;
+    padding-top: 60px;
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
@@ -1311,11 +1311,11 @@ body.signup-page {
    ============================ */
 .orders-container {
     padding: 40px;
-    max-width: 900px; /* Narrower looks more organized */
+    max-width: 900px; 
     margin-left: auto;
     margin-right: auto;
-    padding-top: 80px;
-    background-image: radial-gradient(#2e7d320a 1px, transparent 1px); /* Subtle leaf-green dot pattern */
+    padding-top: 60px;
+    background-image: radial-gradient(#2e7d320a 1px, transparent 1px); 
     background-size: 20px 20px;
 }
 
@@ -1412,8 +1412,30 @@ body.signup-page {
     text-transform: uppercase;
 }
 
-.status-processing { background: #fff8e1; color: #ffa000; }
-.status-completed { background: #e8f5e9; color: #2e7d32; }
+.status-completed { 
+    background: #e8f5e9; 
+    color: #2e7d32; 
+}
+
+.status-pending { 
+    background: #ffebee; 
+    color: #d32f2f; 
+}
+
+.status-preparing { 
+    background: #fff3e0; 
+    color: #ef6c00; 
+}
+
+.status-ready { 
+    background: #e3f2fd; 
+    color: #0056b3; 
+}
+
+.status-cancelled { 
+    background: #eeeeee; 
+    color: #666666; 
+}
 
 /* Left Section Text */
 .order-number {
@@ -1743,9 +1765,13 @@ p {
 
 /* Order Details Styles */
 .order-details-container {
-    max-width: 900px;
-    margin: 100px auto 50px;
-    padding: 0 20px;
+    padding: 40px;
+    max-width: 900px; 
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 60px;
+    background-image: radial-gradient(#2e7d320a 1px, transparent 1px); 
+    background-size: 20px 20px;
 }
 
 .back-nav a {
@@ -1781,7 +1807,30 @@ p {
     font-size: 0.9rem;
 }
 
-.status-badge.processing { background: #fff3e0; color: #ef6c00; }
+.status-badge.Completed { 
+    background: #e8f5e9; 
+    color: #2e7d32; 
+}
+
+.status-badge.Pending { 
+    background: #ffebee; 
+    color: #d32f2f; 
+}
+
+.status-badge.Preparing { 
+    background: #fff3e0; 
+    color: #ef6c00; 
+}
+
+.status-badge.Ready { 
+    background: #e3f2fd; 
+    color: #0056b3; 
+}
+
+.status-badge.Cancelled { 
+    background: #eeeeee; 
+    color: #666666; 
+}
 
 /* Progress Tracker */
 .order-tracker {
@@ -1846,3 +1895,90 @@ p {
     gap: 15px;
     margin: 20px 0;
 }
+
+/* ============================
+            LOGOUT        
+    ==========================*/
+        .logout-page-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f8faf8;
+            padding: 20px;
+        }
+
+        .logout-content {
+            background-color: white;
+            border-radius: 24px;
+            padding: 50px;
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            border: 1px solid #e0ece0;
+        }
+
+        .logout-icon {
+            font-size: 60px;
+            color: #d32f2f;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .logout-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1b5e20;
+        }
+
+        .logout-content p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .logout-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn-confirm {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+        }
+
+        .btn-confirm:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            background-color: #f5f5f5;
+            color: #666;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-cancel:hover {
+            background-color: #eeeeee;
+            color: #333;
+        }

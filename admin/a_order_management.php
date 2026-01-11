@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartServe - Staff Order Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-    <link rel="stylesheet" href="sastyle.css">
+    <link rel="stylesheet" href="../staff/sastyle.css">
 </head>
 <body>
 
@@ -23,10 +23,11 @@
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
-                    <li><a href="menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
-                    <li><a href="order_management.php"><span class="material-symbols-outlined">order_approve</span> Orders</a></li>
-                    <li><a href="report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
+                    <li class="active"><a href="a_dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
+                    <li><a href="a_menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
+                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Order Management</a></li>
+                    <li><a href="user_management.php"><span class="material-symbols-outlined">manage_accounts</span> User Management</a></li>
+                    <li><a href="a_report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
                     <li class="nav-divider"></li>
                     <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
                     <li><a href="../logout.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
@@ -86,7 +87,7 @@
                     </span>
                 </td>
                 <td>
-                    <a href="s_orderdetails.php?id=<?php echo $row['order_id']; ?>" class="view-btn">View</a>
+                    <a href="a_orderdetails.php?id=<?php echo $row['order_id']; ?>" class="view-btn">View</a>
                 </td>
             </tr>
             <?php } ?>

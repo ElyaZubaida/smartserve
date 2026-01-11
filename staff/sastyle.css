@@ -99,7 +99,7 @@ p, a, label {
 
 /* Logout styling */
 .logout-link:hover {
-    background: #c62828 !important; /* Red for logout */
+    background: #c62828 !important; 
 }
 
 
@@ -169,6 +169,37 @@ body {
     gap: 25px;
 }
 
+.staff-menu-header {
+    display: flex;             /* Enable Flexbox */
+    justify-content: space-between; /* Pushes children to opposite ends */
+    align-items: center;       /* Centers them vertically */
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 1000px;         /* Match your form width */
+}
+.btn-back {
+    display: inline-flex;      /* Keeps button from stretching */
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background-color: #666;    /* Professional Grey */
+    color: white !important;
+    text-decoration: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;      /* Prevents stretching vertically */
+}
+
+.btn-back:hover {
+    background-color: #444;     /* Slightly darker on hover */
+    transform: translateX(-3px); /* Subtle hint of "going back" */
+}
+
+.btn-back span {
+    font-size: 18px;            /* Icon size adjustment */
+}
 /* Card Styling */
 .staff-menu-card {
     background: white;
@@ -359,48 +390,118 @@ body {
 
 .delete-menu-btn:hover { background-color: #d32f2f; color: white; }
 
-/* ============================
-        DASHBOARD PAGE
-   ============================ */
-.dashboard-container {
-    padding: 40px 20px;
-    width: 100%;
-    max-width: none !important;
+/* ===================
+        DASHBOARD 
+   ==================== */
+.staff-dash-content {
+    margin-left: 260px;
+    padding: 40px;
+    background-color: #f8faf8;
 }
 
-.dashboard-grid {
+.staff-dash-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 30px;
-    max-width: none;
-    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
 }
 
-.dashboard-card {
-    background: #a8a8a8 !important;
-    padding: 50px 40px;
+.dash-stat-card {
+    background: white;
+    padding: 30px;
     border-radius: 20px;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    min-height: 180px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e0ece0;
+    transition: transform 0.3s ease;
+}
+
+.dash-stat-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Icon Container */
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: #f0f4f0; /* Light green tint */
+    color: #2e7d32;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon span {
+    font-size: 32px;
+}
+
+/* Text Details */
+.stat-details h3 {
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.stat-details .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1b5e20;
+}
+
+/* Specific Card Accents */
+.dash-stat-card.sales .stat-icon { background: #e8f5e9; color: #2e7d32; }
+.dash-stat-card.items .stat-icon { background: #e3f2fd; color: #007bff; }
+.dash-stat-card.orders .stat-icon { background: #fff3e0; color: #ef6c00; }
+.dash-stat-card.pending .stat-icon { background: #ffebee; color: #d32f2f; }
+
+.dashboard-table-card, .dashboard-alert-card {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border: 1px solid #e0ece0;
+}
+
+.dashboard-table-card h3, .dashboard-alert-card h3 {
+    font-size: 16px;
+    color: #1b5e20;
+    margin-bottom: 15px;
+}
+
+.dashboard-secondary-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr; /* The weekly chart is wider */
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.dashboard-alert-card {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    align-items: center; /* Center the pie chart in its box */
+    text-align: center;
 }
 
-.dashboard-card h3 {
-    font-size: 28px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: #000 !important;
+.dashboard-alert-card h3 {
+    width: 100%;
+    text-align: left; /* Keep the title aligned left */
 }
 
-.dashboard-card .value {
-    font-size: 42px;
-    font-weight: bold;
-    color: #000 !important;
-    margin: 0;
+/* Ensure canvas doesn't grow too large */
+canvas {
+    max-height: 300px;
+    width: 100% !important;
+}
+
+@media (max-width: 992px) {
+    .dashboard-secondary-grid {
+        grid-template-columns: 1fr; /* Stack charts on top of each other on tablets/phones */
+    }
 }
 
 .sidebar .logo {
@@ -419,17 +520,19 @@ body {
         PROFILE PAGE
    ============================ */
 .profile-content{
-    margin-left: 260px; /* Aligned with sidebar */
+    margin-left: 260px;
     padding: 40px;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
+
 .staff-profile-page {
-    background-color: #f0f4f0; /* soft neutral green */
-    min-height: 80vh;
+    background-color: #f0f4f0;
+    min-height: auto;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 40px 0;
+    align-items: flex-start;
 }
 
 /* Profile Card */
@@ -467,6 +570,7 @@ body {
     color: #1b5e20;
     background-color: #f9f9f9;
     transition: all 0.3s ease;
+    box-sizing: border-box;
 }
 
 .input-field:focus {
@@ -691,84 +795,107 @@ body {
     min-height: 100vh;
 }
 
-        /* Report Header - CENTERED */
-        .report-header {
-            text-align: center;
-            margin-bottom: 20px;
-            position: relative;
-            width: 100%;
-            max-width: 850px;
-        }
+.report-summary-bar {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    max-width: 950px;
+}
 
-        .report-title-box {
-            background-color: white;
-            padding: 12px 25px;
-            border-radius: 16px;
-            display: inline-block;
-            margin-bottom: 12px;
-        }
+.summary-item {
+    background: white;
+    flex: 1;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid #e0ece0;
+    text-align: center;
+}
 
-        .report-title-box h2 {
-            font-size: 22px;
-            font-weight: bold;
-            margin: 0 0 3px 0;
-        }
+.summary-item .label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
 
-        .report-title-box .report-date {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 0;
-        }
+.summary-item .count {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1b5e20;
+}
+
+/* Enhanced Filters */
+.filters-container {
+    background: #f0f4f0;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    max-width: 950px;
+}
+
+.filters-row {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1b5e20;
+    margin-left: 5px;
+}
+
+.filter-input, .filter-dropdown {
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid #ccdcc8;
+    background: white;
+    font-size: 13px;
+    outline: none;
+}
+
+.filter-submit-btn {
+    background: #1b5e20;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.filter-submit-btn:hover {
+    background: #2e7d32;
+}
 
         /* Export Button - POSITIONED */
         .export-btn {
-            position: absolute;
-            right: 0;
-            top: 0;
-            background-color: #000;
+            background-color: #007bff;
             color: white;
-            padding: 8px 28px;
-            border-radius: 20px;
-            border: none;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
             text-decoration: none;
-            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: 0.3s;
         }
 
         .export-btn:hover {
-            background-color: #333;
-        }
-
-        /* Filters Section - CENTERED */
-        .filters-section {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 18px;
-            width: 100%;
-            max-width: 850px;
-        }
-
-        .filter-dropdown {
-            padding: 8px 20px;
-            border-radius: 20px;
-            border: none;
-            background-color: white;
-            font-size: 13px;
-            cursor: pointer;
-            min-width: 150px;
-        }
-
-        /* Report Table Container - CENTERED */
-        .report-table-container {
-            background-color: #d3d3d3;
-            padding: 15px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 850px;
+            background-color: #0056b3;
+            transform: translateY(-2px);
         }
 
 /* =========================================
@@ -892,3 +1019,123 @@ body {
                 display: none;
             }
         }
+
+/* ============================
+        ORDER DETAILS PAGE
+   ============================ */
+
+.order-details-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.order-items-card, .order-status-card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border: 1px solid #e0ece0;
+}
+
+/* Layout for the item name and request */
+.item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+}
+
+/* Special Request Styling */
+.special-request {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-style: italic;
+    color: #856404; /* Darker yellow/brown for readability */
+    background-color: #fff3cd; /* Soft warning yellow background */
+    padding: 4px 8px;
+    border-radius: 6px;
+    width: fit-content;
+    margin-top: 2px;
+}
+
+.special-request span.material-symbols-outlined {
+    font-size: 14px; /* Icon size */
+}
+
+.details-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.details-table th {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 2px solid #f0f4f0;
+    color: #1b5e20;
+}
+
+.details-table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #f9f9f9;
+}
+
+.order-info-footer {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px dashed #ccdcc8;
+    font-size: 14px;
+    color: #666;
+}
+
+/* Color coding the select dropdown for better UX */
+.status-select {
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.status-pending { background-color: #ffebee !important; color: #d32f2f !important; }      
+.status-preparing { background-color: #fff3e0 !important; color: #ef6c00 !important; }    
+.status-ready { background-color: #e3f2fd !important; color: #1976d2 !important; }        
+.status-completed { background-color: #e8f5e9 !important; color: #2e7d32 !important; }    
+.status-cancelled { background-color: #eeeeee !important; color: #757575 !important; }    
+
+/*-------------------
+    USER MANAGEMENT 
+---------------------*/
+
+.staff-menu-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.staff-menu-edit {
+    text-decoration: none;
+    color: #1b5e20;
+    transition: 0.3s;
+}
+
+.staff-menu-edit:hover {
+    transform: scale(1.2);
+}
+
+/* Ensure table rows are aligned for reading long names */
+.report-table td {
+    padding: 15px;
+    vertical-align: middle;
+}
+.role-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .role-admin { background-color: #e3f2fd; color: #1976d2; }    
+        .role-staff { background-color: #e8f5e9; color: #2e7d32; }    
+        .role-customer { background-color: #fff3e0; color: #ef6c00; }

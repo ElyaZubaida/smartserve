@@ -9,17 +9,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Serve - Signup</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="style.css"> <!-- Link to your external CSS -->
+    <link rel="stylesheet" href="style.css"> 
 </head>
 <body class="signup-page">
     <!-- Header -->
-    <header>
+     <header>
         <div class="logo">
-            <img src="img/logo.png" alt="Smart Serve Logo"> <!-- Replace with your logo image -->
-            <h1>SmartServe</h1>
+            <img src="img/logo.png" alt="Smart Serve Logo">
+            <h1>Smart<span>Serve</span></h1>
         </div>
-        <hr> <!-- Separator line -->
+        <hr>
     </header>
+
 
     <!-- Sign Up Form -->
     <div class="signup-container">

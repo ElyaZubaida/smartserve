@@ -87,9 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <option value="">Select Food Type</option>
                     <option value="Rice">Rice</option>
                     <option value="Noodles">Noodles</option>
-                    <option value="Western">Western</option>
-                    <option value="Fast Food">Fast Food</option>
-                    <option value="Healthy">Healthy</option>
+                    <option value="Western">Soup</option>
+                    <option value="Western">Dessert</option>
+                    <option value="Fast Food">Drinks</option>
                 </select>
             </div>
 
@@ -111,7 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <option value="Chinese">Chinese</option>
                     <option value="Indian">Indian</option>
                     <option value="Western">Western</option>
-                    <option value="Korean">Korean</option>
                 </select>
             </div>
 
@@ -131,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <option value="">Select Hunger Level</option>
                     <option value="Light">Light</option>
                     <option value="Normal">Normal</option>
-                    <option value="Very Hungry">Very Hungry</option>
+                    <option value="Very Hungry">Hungry</option>
                 </select>
             </div>
 

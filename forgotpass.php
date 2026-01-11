@@ -14,10 +14,10 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
+     <header>
         <div class="logo">
             <img src="img/logo.png" alt="Smart Serve Logo">
-            <h1>SmartServe</h1>
+            <h1>Smart<span>Serve</span></h1>
         </div>
         <hr>
     </header>
@@ -32,9 +32,5 @@
         <button type="submit" class="btn-update">Update</button>
     </form>
 </div>
-
-<footer>
-    <p>SmartServe - Student Canteen Food Ordering System</p>
-</footer>
 </body>
 </html>

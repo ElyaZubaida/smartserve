@@ -156,7 +156,7 @@
     <script>
         function scrollToCategory(category) {
             const section = document.getElementById(category);
-            const offset = 130; // Accounts for sticky headers
+            const offset = 130; 
             const bodyRect = document.body.getBoundingClientRect().top;
             const elementRect = section.getBoundingClientRect().top;
             const elementPosition = elementRect - bodyRect;
