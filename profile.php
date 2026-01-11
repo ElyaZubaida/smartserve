@@ -11,7 +11,7 @@
     <title>SmartServe - Student Profile</title>
 
     <!-- Google Fonts Poppins -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="staff-style-student-page">
@@ -19,15 +19,17 @@
 <header>
     <div class="menubar">
         <div class="logo">
-            <img src="logo.png" alt="Smart Serve Logo">
+            <img src="img/logo.png" alt="Smart Serve Logo">
         </div>
 
         <nav>
             <ul>
-                <li><a href="myorders.php">My Orders</a></li>
-                <li><a href="cart.php">Cart</a></li>
-                <li><a href="profile.php">Profile</a></li>
-                <li><a href="logout.php">Logout</a></li>
+                <li><a href="menu.php"><span class="material-symbols-outlined">home</span> Home</a></li>
+                    <li><a href="ai.php"><span class="material-symbols-outlined">psychology</span> Food Recommendation</a></li>
+                    <li><a href="myorders.php"><span class="material-symbols-outlined">receipt_long</span> Orders</a></li>
+                    <li><a href="cart.php"><span class="material-symbols-outlined">shopping_cart</span> Cart</a></li>
+                    <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
+                    <li><a href="logout.php"><span class="material-symbols-outlined">logout</span></a></li>
             </ul>
         </nav>
     </div>
@@ -46,10 +48,7 @@
     </form>
 </div>
 
-<!-- ================= FOOTER ================= -->
-<footer>
-    <p>SmartServe - Student Canteen Food Ordering System</p>
-</footer>
+
 </body>
 </html>
 

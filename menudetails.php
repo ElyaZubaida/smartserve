@@ -36,7 +36,7 @@
     <!-- Menu Details Section -->
     <div class="details-container">
         <div class="orders-title">
-            <h2>Menu Details</h2>
+            <h1>Menu Details</h1>
         </div>
         
         <section class="menu-details-card">
@@ -75,7 +75,6 @@
         </section>
     </div>
     <script>
-        // Quantity adjustment functionality
         const decreaseButton = document.querySelector('.decrease');
         const increaseButton = document.querySelector('.increase');
         const quantityInput = document.getElementById('quantity');

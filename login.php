@@ -5,33 +5,26 @@
 <?php
 session_start();
 
-// Check if the form has been submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Fetch username and password from POST data
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // Example of validating against static data (replace with database logic later)
     $valid_users = [
-        'student1' => 'password123',  // Example student
-        'staff1' => 'staffpassword',  // Example staff
+        'student1' => 'password123',  
+        'staff1' => 'staffpassword', 
     ];
 
-    // Check if the username exists and the password matches
     if (isset($valid_users[$username]) && $valid_users[$username] == $password) {
-        // Store the username and role in session
         $_SESSION['username'] = $username;
         $_SESSION['role'] = (strpos($username, 'student') !== false) ? 'student' : 'staff';
 
-        // Redirect based on the user's role
         if ($_SESSION['role'] == 'student') {
-            header('Location: menu.php'); // Redirect to student dashboard
+            header('Location: menu.php'); 
         } else {
-            header('Location: staff/dashboard.php'); // Redirect to staff dashboard
+            header('Location: staff/dashboard.php'); 
         }
         exit();
     } else {
-        // If login fails, show an error message
         $error_message = 'Invalid username or password';
     }
 }
@@ -51,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <header>
         <div class="logo">
             <img src="img/logo.png" alt="Smart Serve Logo">
-            <h1>SmartServe</h1>
+            <h1>Smart<span>Serve</span></h1>
         </div>
         <hr>
     </header>
@@ -116,7 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     const studentRadio = document.querySelector('input[value="student"]');
     const staffRadio = document.querySelector('input[value="staff"]');
     const signupSection = document.getElementById('signup-section');
-    // Get the Forgot Password container
     const forgotPasswordLink = document.querySelector('.forgot-password');
 
     function toggleSignup() {
@@ -132,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     studentRadio.addEventListener('change', toggleSignup);
     staffRadio.addEventListener('change', toggleSignup);
 
-    toggleSignup(); // Run on load
+    toggleSignup(); 
 </script>
 </html>
 

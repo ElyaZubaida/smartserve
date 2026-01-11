@@ -43,18 +43,18 @@
         <div class="details-main-card">
             <div class="details-header">
                 <div class="header-left">
-                    <h1>Order #SS-1024</h1>
-                    <p>Placed on 24 May 2024, 10:15 AM</p>
+                    <h1>Order #1000</h1>
+                    <p>Placed on: <?php echo date('d/m/Y'); ?></p>
                 </div>
-                <div class="status-badge processing">Processing</div>
+                <div class="status-badge Pending">Pending</div>
             </div>
 
             <div class="order-tracker">
-                <div class="step completed">
-                    <span class="material-symbols-outlined">check_circle</span>
-                    <p>Placed</p>
-                </div>
                 <div class="step active">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <p>Pending</p>
+                </div>
+                <div class="step">
                     <span class="material-symbols-outlined">restaurant</span>
                     <p>Preparing</p>
                 </div>
@@ -64,7 +64,7 @@
                 </div>
                 <div class="step">
                     <span class="material-symbols-outlined">task_alt</span>
-                    <p>Collected</p>
+                    <p>Completed</p>
                 </div>
                 <div class="progress-line"></div>
             </div>
@@ -73,17 +73,13 @@
                 <div class="items-summary">
                     <h3>Items Ordered</h3>
                     <div class="summary-item">
-                        <span>Nasi Lemak x2</span>
-                        <span>RM 4.00</span>
-                    </div>
-                    <div class="summary-item">
-                        <span>Teh Tarik x2</span>
-                        <span>RM 4.00</span>
+                        <span>Nasi Lemak Special x1</span>
+                        <span>RM 5.00</span>
                     </div>
                     <hr>
                     <div class="summary-total">
                         <span>Total Paid</span>
-                        <span>RM 8.00</span>
+                        <span>RM 5.00</span>
                     </div>
                 </div>
 

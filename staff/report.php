@@ -244,7 +244,7 @@
     <!-- Main content area -->
     <div class="main-content staff-report-content">
     <?php
-    // Mock Data Array for Preview
+    // Dummy data
     $mock_menu = [
         ['id' => 1, 'name' => 'Nasi Lemak Special', 'price' => 5.00, 'description' => 'Fragrant coconut rice with sambal, anchovies, and egg.', 'image' => 'nasilemak.jpg'],
         ['id' => 2, 'name' => 'Mee Goreng Mamak', 'price' => 4.50, 'description' => 'Spicy stir-fried noodles with tofu and vegetables.', 'image' => 'meegoreng.jpg'],
@@ -261,50 +261,81 @@
     }
     ?>
 
-    <div class="report-header">
-        <div class="report-title-box">
-            <h2>System Inventory Report</h2>
-            <p class="report-date">Generated: <?php echo date('d/m/Y'); ?></p>
+    <div class="header">
+        <div class="title">
+            <h2>Reports</h2>
+            <p>Generated: <?php echo date('d/m/Y'); ?></p>
         </div>
-        <a href="#" class="export-btn">Export PDF</a>
+        <button onclick="window.print()" class="export-btn">
+            <span class="material-symbols-outlined" style="font-size: 16px;">print</span> Print Report
+        </button>
     </div>
 
-    <div class="filters-section">
-        <select class="filter-dropdown"><option>All Types</option></select>
-        <select class="filter-dropdown"><option>All Categories</option></select>
-        <select class="filter-dropdown"><option>Order Type</option></select>
-    </div>
+    <form method="GET" action="" class="filters-container">
+        <div class="filters-row">
+            <div class="filter-group">
+                <label>Report Type</label>
+                <select name="report_type" class="filter-dropdown">
+                    <option value="inventory">Sales Report</option>
+                    <option value="sales">Sales Performance</option>
+                    <option value="orders">Order Summary</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>From Date</label>
+                <input type="date" name="date_from" class="filter-input">
+            </div>
+
+            <div class="filter-group">
+                <label>To Date</label>
+                <input type="date" name="date_to" class="filter-input">
+            </div>
+
+            <div class="filter-group">
+                <label>&nbsp;</label> <button type="submit" class="filter-submit-btn">Apply Filter</button>
+            </div>
+        </div>
+    </form>
 
     <div class="report-table-container">
-        <table class="report-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Image</th>
-                    <th>Menu Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($mock_menu as $row): ?>
-                <tr>
-                    <td><?php echo str_pad($row['id'], 3, '0', STR_PAD_LEFT); ?></td>
-                    <td>
-                        <div class="menu-picture">
-                            <img src="../img/<?php echo $row['image']; ?>" alt="food" onerror="this.src='../img/logo.png'">
-                        </div>
-                    </td>
-                    <td><strong><?php echo $row['name']; ?></strong></td>
-                    <td><?php echo getMenuType($row['name']); ?></td>
-                    <td class="menu-description"><?php echo $row['description']; ?></td>
-                    <td>RM <?php echo number_format($row['price'], 2); ?></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Menu Item(s)</th>
+                <th>Qty</th>
+                <th>Amount Paid</th>
+                <th>Status</th>
+                <th>Staff</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php 
+            // Dummy data
+            $sales_reports = [
+                ['id' => 7721, 'date' => '11/01/2026', 'items' => 'Nasi Lemak Special', 'qty' => 2, 'paid' => 10.00, 'status' => 'Completed', 'staff' => 'Amirah'],
+                ['id' => 7722, 'date' => '11/01/2026', 'items' => 'Teh Tarik Ais', 'qty' => 1, 'paid' => 2.50, 'status' => 'Completed', 'staff' => 'Qis'],
+                ['id' => 7723, 'date' => '10/01/2026', 'items' => 'Mee Goreng Mamak', 'qty' => 3, 'paid' => 13.50, 'status' => 'Completed', 'staff' => 'Elya']
+            ];
+
+            foreach($sales_reports as $report): ?>
+            <tr>
+                <td>#<?php echo $report['id']; ?></td>
+                <td><?php echo $report['date']; ?></td>
+                <td><strong><?php echo $report['items']; ?></strong></td>
+                <td><?php echo $report['qty']; ?></td>
+                <td>RM <?php echo number_format($report['paid'], 2); ?></td>
+                <td>
+                    <span class="status-badge status-completed"><?php echo $report['status']; ?></span>
+                </td>
+                <td><?php echo $report['staff']; ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
 </div>
 </body>
 </html>

@@ -228,9 +228,6 @@
         </div>
     <div class="orders-container">
     <?php
-    /* MOCK DATA FOR PREVIEW 
-       We create a fake array so you can see the GUI without a database 
-    */
     $mock_orders = [
         ['order_id' => 1, 'order_number' => '7721', 'status' => 'Preparing'],
         ['order_id' => 2, 'order_number' => '7722', 'status' => 'Ready for Pickup'],
@@ -253,7 +250,6 @@
             <?php
             $no = 1;
             foreach($mock_orders as $row) {
-                // Determine status class based on your friend's CSS logic
                 $statusClass = '';
                 switch(strtolower($row['status'])) {
                     case 'completed': $statusClass = 'status-completed'; break;
@@ -273,7 +269,7 @@
                     </span>
                 </td>
                 <td>
-                    <a href="order_details.php?id=<?php echo $row['order_id']; ?>" class="view-btn">View</a>
+                    <a href="s_orderdetails.php?id=<?php echo $row['order_id']; ?>" class="view-btn">View</a>
                 </td>
             </tr>
             <?php } ?>

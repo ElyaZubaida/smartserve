@@ -36,16 +36,15 @@
     <!-- Start code here -->
     <div class="orders-container">
         <div class="orders-title">
-            <span class="material-symbols-outlined title-icon">history_edu</span>
-            <h2>My Orders</h2>
+            <h1>My Orders</h1>
         </div>
 
         <div class="order-card">
             <div class="order-left">
                 <div class="order-info-group">
                     <span class="order-number">Order #1000</span>
-                    <div class="order-status status-processing">
-                        <span class="material-symbols-outlined">restaurant</span> Preparing
+                    <div class="status-badge Pending">
+                        <span class="material-symbols-outlined">restaurant</span> Pending
                     </div>
                 </div>
                 <span class="order-date">Today, 10:00 AM</span>
