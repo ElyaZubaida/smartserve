@@ -2,6 +2,15 @@
  Frontend: Insyirah 
  Backend: Amirah 
  -->
+<?php
+session_start();
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header('Location: loginadmin.php');
+    exit();
+}
+$current_page = basename($_SERVER['PHP_SELF']);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +18,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartServe - Staff Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-    <link rel="stylesheet" href="sastyle.css">
+    <link rel="stylesheet" href="../staff/sastyle.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -23,10 +32,11 @@
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
-                    <li><a href="menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
-                    <li><a href="order_management.php"><span class="material-symbols-outlined">order_approve</span> Orders</a></li>
-                    <li><a href="report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
+                    <li class="active"><a href="a_dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
+                    <li><a href="a_menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
+                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Order Management</a></li>
+                    <li><a href="user_management.php"><span class="material-symbols-outlined">manage_accounts</span> User Management</a></li>
+                    <li><a href="a_report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
                     <li class="nav-divider"></li>
                     <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
                     <li><a href="../logout.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
@@ -93,7 +103,7 @@
 
     <div class="dashboard-alert-card">
         <h3>All-Time Popularity</h3>
-        <p style="font-size: 12px; color: #777; margin-bottom: 15px;">Distribution of total sales by item.</p>
+        <p style="font-size: 12px; color: #777; margin-bottom: 15px;">Distribution of total sales by Menu.</p>
         <div style="max-width: 280px; margin: 0 auto;"> <canvas id="popularPieChart"></canvas>
         </div>
     </div>
@@ -120,7 +130,7 @@ new Chart(ctxWeekly, {
     }
 });
 
-// 2. All-Time Popular Items - Doughnut Chart
+// 2. Popular Menu - Doughnut Chart
 const ctxPie = document.getElementById('popularPieChart').getContext('2d');
 new Chart(ctxPie, {
     type: 'doughnut',

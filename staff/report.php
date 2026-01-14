@@ -10,6 +10,213 @@
     <title>SmartServe - Staff Report</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="sastyle.css">
+    
+    <style>
+        body {
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin-left: 250px;
+        }
+
+        /* Report Header - CENTERED */
+        .report-header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            width: 100%;
+            max-width: 850px;
+        }
+
+        .report-title-box {
+            background-color: white;
+            padding: 12px 25px;
+            border-radius: 16px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .report-title-box h2 {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 0 0 3px 0;
+        }
+
+        .report-title-box .report-date {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        /* Export Button - POSITIONED */
+        .export-btn {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background-color: #000;
+            color: white;
+            padding: 8px 28px;
+            border-radius: 20px;
+            border: none;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .export-btn:hover {
+            background-color: #333;
+        }
+
+        /* Filters Section - CENTERED */
+        .filters-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            width: 100%;
+            max-width: 850px;
+        }
+
+        .filter-dropdown {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: none;
+            background-color: white;
+            font-size: 13px;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        /* Report Table Container - CENTERED */
+        .report-table-container {
+            background-color: #d3d3d3;
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 850px;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            table-layout: fixed;
+        }
+
+        .report-table thead {
+            background-color: #888;
+        }
+
+        .report-table th {
+            padding: 10px 6px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+            border: 1px solid #666;
+            word-wrap: break-word;
+        }
+
+        /* Column Widths */
+        .report-table th:nth-child(1) { width: 8%; }
+        .report-table th:nth-child(2) { width: 10%; }
+        .report-table th:nth-child(3) { width: 16%; }
+        .report-table th:nth-child(4) { width: 12%; }
+        .report-table th:nth-child(5) { width: 36%; }
+        .report-table th:nth-child(6) { width: 12%; }
+
+        .report-table tbody tr {
+            background-color: #b8b8b8;
+        }
+
+        .report-table tbody tr:nth-child(even) {
+            background-color: #c8c8c8;
+        }
+
+        .report-table td {
+            padding: 10px 6px;
+            text-align: center;
+            font-size: 12px;
+            color: #000;
+            border: 1px solid #666;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Menu Image */
+        .menu-picture {
+            width: 45px;
+            height: 45px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 50%;
+            background-color: white;
+        }
+
+        .menu-picture img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .menu-description {
+            font-size: 10px;
+            line-height: 1.3;
+            text-align: left;
+            padding: 6px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 25px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .report-table {
+                font-size: 11px;
+            }
+            
+            .menu-picture {
+                width: 38px;
+                height: 38px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+                margin-left: 0;
+            }
+
+            .export-btn {
+                position: static;
+                display: block;
+                margin: 12px auto 0;
+            }
+
+            .filters-section {
+                flex-direction: column;
+            }
+
+            .report-table th:nth-child(5),
+            .report-table td:nth-child(5) {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -37,7 +244,7 @@
     <!-- Main content area -->
     <div class="main-content staff-report-content">
     <?php
-    // Mock Data Array for Preview
+    // Dummy data
     $mock_menu = [
         ['id' => 1, 'name' => 'Nasi Lemak Special', 'price' => 5.00, 'description' => 'Fragrant coconut rice with sambal, anchovies, and egg.', 'image' => 'nasilemak.jpg'],
         ['id' => 2, 'name' => 'Mee Goreng Mamak', 'price' => 4.50, 'description' => 'Spicy stir-fried noodles with tofu and vegetables.', 'image' => 'meegoreng.jpg'],
@@ -54,50 +261,81 @@
     }
     ?>
 
-    <div class="report-header">
-        <div class="report-title-box">
-            <h2>System Inventory Report</h2>
-            <p class="report-date">Generated: <?php echo date('d/m/Y'); ?></p>
+    <div class="header">
+        <div class="title">
+            <h2>Reports</h2>
+            <p>Generated: <?php echo date('d/m/Y'); ?></p>
         </div>
-        <a href="#" class="export-btn">Export PDF</a>
+        <button onclick="window.print()" class="export-btn">
+            <span class="material-symbols-outlined" style="font-size: 16px;">print</span> Print Report
+        </button>
     </div>
 
-    <div class="filters-section">
-        <select class="filter-dropdown"><option>All Types</option></select>
-        <select class="filter-dropdown"><option>All Categories</option></select>
-        <select class="filter-dropdown"><option>Order Type</option></select>
-    </div>
+    <form method="GET" action="" class="filters-container">
+        <div class="filters-row">
+            <div class="filter-group">
+                <label>Report Type</label>
+                <select name="report_type" class="filter-dropdown">
+                    <option value="inventory">Sales Report</option>
+                    <option value="sales">Sales Performance</option>
+                    <option value="orders">Order Summary</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>From Date</label>
+                <input type="date" name="date_from" class="filter-input">
+            </div>
+
+            <div class="filter-group">
+                <label>To Date</label>
+                <input type="date" name="date_to" class="filter-input">
+            </div>
+
+            <div class="filter-group">
+                <label>&nbsp;</label> <button type="submit" class="filter-submit-btn">Apply Filter</button>
+            </div>
+        </div>
+    </form>
 
     <div class="report-table-container">
-        <table class="report-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Image</th>
-                    <th>Menu Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($mock_menu as $row): ?>
-                <tr>
-                    <td><?php echo str_pad($row['id'], 3, '0', STR_PAD_LEFT); ?></td>
-                    <td>
-                        <div class="menu-picture">
-                            <img src="../img/<?php echo $row['image']; ?>" alt="food" onerror="this.src='../img/logo.png'">
-                        </div>
-                    </td>
-                    <td><strong><?php echo $row['name']; ?></strong></td>
-                    <td><?php echo getMenuType($row['name']); ?></td>
-                    <td class="menu-description"><?php echo $row['description']; ?></td>
-                    <td>RM <?php echo number_format($row['price'], 2); ?></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Date</th>
+                <th>Menu Item(s)</th>
+                <th>Qty</th>
+                <th>Amount Paid</th>
+                <th>Status</th>
+                <th>Staff</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php 
+            // Dummy data
+            $sales_reports = [
+                ['id' => 7721, 'date' => '11/01/2026', 'items' => 'Nasi Lemak Special', 'qty' => 2, 'paid' => 10.00, 'status' => 'Completed', 'staff' => 'Amirah'],
+                ['id' => 7722, 'date' => '11/01/2026', 'items' => 'Teh Tarik Ais', 'qty' => 1, 'paid' => 2.50, 'status' => 'Completed', 'staff' => 'Qis'],
+                ['id' => 7723, 'date' => '10/01/2026', 'items' => 'Mee Goreng Mamak', 'qty' => 3, 'paid' => 13.50, 'status' => 'Completed', 'staff' => 'Elya']
+            ];
+
+            foreach($sales_reports as $report): ?>
+            <tr>
+                <td>#<?php echo $report['id']; ?></td>
+                <td><?php echo $report['date']; ?></td>
+                <td><strong><?php echo $report['items']; ?></strong></td>
+                <td><?php echo $report['qty']; ?></td>
+                <td>RM <?php echo number_format($report['paid'], 2); ?></td>
+                <td>
+                    <span class="status-badge status-completed"><?php echo $report['status']; ?></span>
+                </td>
+                <td><?php echo $report['staff']; ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
 </div>
 </body>
 </html>
