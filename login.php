@@ -3,31 +3,77 @@
  Backend: Qis 
  -->
 <?php
-session_start();
+    session_start();
+    include 'config/db_connect.php';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    // Check if the form has been submitted
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $username = trim($_POST['username']);
+        $password = trim($_POST['password']);
+        $role = $_POST['role']; // 'student' or 'staff'
 
-    $valid_users = [
-        'student1' => 'password123',  
-        'staff1' => 'staffpassword', 
-    ];
-
-    if (isset($valid_users[$username]) && $valid_users[$username] == $password) {
-        $_SESSION['username'] = $username;
-        $_SESSION['role'] = (strpos($username, 'student') !== false) ? 'student' : 'staff';
-
-        if ($_SESSION['role'] == 'student') {
-            header('Location: menu.php'); 
+        if (empty($username) || empty($password)) {
+            $error_message = 'Please enter both username and password';
         } else {
-            header('Location: staff/dashboard.php'); 
+            if ($role == 'student') {
+                // Query for student login
+                $query = "SELECT student_ID, student_name, student_email, student_password FROM students WHERE student_email = ? OR student_name = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("ss", $username, $username);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    $user = $result->fetch_assoc();
+                    
+                    // Verify password (assuming passwords are hashed with password_hash())
+                    if (password_verify($password, $user['student_password'])) {
+                        // Set session variables
+                        $_SESSION['student_id'] = $user['student_ID'];
+                        $_SESSION['student_name'] = $user['student_name'];
+                        $_SESSION['student_email'] = $user['student_email'];
+                        $_SESSION['role'] = 'student';
+
+                        // Redirect to menu page
+                        header('Location: menu.php');
+                        exit();
+                    } else {
+                        $error_message = 'Invalid username or password';
+                    }
+                } else {
+                    $error_message = 'Invalid username or password';
+                }
+            } else {
+                // Query for staff login
+                $query = "SELECT staffID, staffName, staffEmail, staffPassword FROM staff WHERE staffEmail = ? OR staffName = ?";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("ss", $username, $username);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    $user = $result->fetch_assoc();
+                    
+                    // Verify password
+                    if (password_verify($password, $user['staffPassword'])) {
+                        // Set session variables
+                        $_SESSION['staff_id'] = $user['staffID'];
+                        $_SESSION['staff_name'] = $user['staffName'];
+                        $_SESSION['staff_email'] = $user['staffEmail'];
+                        $_SESSION['role'] = 'staff';
+
+                        // Redirect to staff dashboard
+                        header('Location: staff/dashboard.php');
+                        exit();
+                    } else {
+                        $error_message = 'Invalid username or password';
+                    }
+                } else {
+                    $error_message = 'Invalid username or password';
+                }
+            }
         }
-        exit();
-    } else {
-        $error_message = 'Invalid username or password';
     }
-}
 ?>
 
 <!DOCTYPE html>
