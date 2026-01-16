@@ -2,6 +2,21 @@
  Frontend: Insyirah 
  Backend: Aleesya
  -->
+<?php
+    session_start();
+    include 'config/db_connect.php';
+
+    // Check if user is logged in
+    if (!isset($_SESSION['student_id'])) {
+        header('Location: login.php');
+        exit();
+    }
+
+    $student_id = $_SESSION['student_id'];
+
+    
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,24 +102,24 @@
                             <option>1.00 PM</option>
                             <option>1.30 PM</option>
                         </select>
-                    </div>
+                        </div>
 
-                    <div class="final-total-box">
-                        <div class="total-row">
-                            <span>Subtotal</span>
-                            <span>RM 8.00</span>
+                        <div class="final-total-box">
+                            <div class="total-row">
+                                <span>Subtotal</span>
+                                <span>RM 8.00</span>
+                            </div>
+                            <div class="total-row main">
+                                <span>Grand Total</span>
+                                <span>RM 8.00</span>
+                            </div>
+                            <button type="submit" class="place-order-confirm-btn">
+                                Confirm & Place Order <span class="material-symbols-outlined">arrow_forward</span>
+                            </button>
                         </div>
-                        <div class="total-row main">
-                            <span>Grand Total</span>
-                            <span>RM 8.00</span>
-                        </div>
-                        <button type="submit" class="place-order-confirm-btn">
-                            Confirm & Place Order <span class="material-symbols-outlined">arrow_forward</span>
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-</body>
+    </body>
 </html>
