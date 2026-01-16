@@ -2187,3 +2187,25 @@ p {
         gap: 15px;
     }
   
+/* Special request styling */
+    .item-request {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: #666;
+        font-style: italic;
+        margin-top: 4px;
+    }
+
+    .item-request .material-symbols-outlined {
+        font-size: 14px;
+    }
+
+    /* Item info column styling */
+    .item-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+    }

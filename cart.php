@@ -19,6 +19,7 @@
         $cart_id = intval($_POST['cart_id']);
         $menu_id = intval($_POST['menu_id']);
         $new_qty = intval($_POST['quantity']);
+        $request = isset($_POST['special_request']) ? trim($_POST['special_request']) : '';
         
         if ($new_qty > 0) {
             // Get menu price to calculate new subtotal
@@ -30,10 +31,10 @@
             $menu = $price_result->fetch_assoc();
             $new_subtotal = $menu['menuPrice'] * $new_qty;
             
-            // Update cart_menu
-            $update = "UPDATE cart_menu SET cm_quantity = ?, cm_subtotal = ? WHERE cart_ID = ? AND menuID = ?";
+            // Update cart_menu (including request)
+            $update = "UPDATE cart_menu SET cm_quantity = ?, cm_subtotal = ?, cm_request = ? WHERE cart_ID = ? AND menuID = ?";
             $stmt = $conn->prepare($update);
-            $stmt->bind_param("idii", $new_qty, $new_subtotal, $cart_id, $menu_id);
+            $stmt->bind_param("idssi", $new_qty, $new_subtotal, $request, $cart_id, $menu_id);
             $stmt->execute();
             
             // Update cart total
@@ -67,8 +68,8 @@
         exit();
     }
 
-    // Fetch cart items using JOIN
-    $cart_query = "SELECT carts.cart_ID, cart_menu.cm_quantity, cart_menu.menuID,
+    // Fetch cart items including request
+    $cart_query = "SELECT carts.cart_ID, cart_menu.cm_quantity, cart_menu.menuID, cart_menu.cm_request,
                           menus.menuName, menus.menuPrice, menus.menuImage
                    FROM carts
                    JOIN cart_menu ON carts.cart_ID = cart_menu.cart_ID
@@ -142,9 +143,22 @@
                                         <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
                                         <p class="price-tag">RM <?php echo number_format($item['menuPrice'], 2); ?></p>
                                     </div>
-                                    
+
+                                    <p class="special-request">
+                                        <?php if (!empty($item['request'])): ?>
+                                            <strong>Request:</strong> <?php echo htmlspecialchars($item['request']); ?>
+                                        <?php endif; ?>
+                                    </p>
+
                                     <div class="cart-card-actions">
                                         <form method="POST" class="qty-form" id="form-<?php echo $index; ?>">
+                                            <div class="special-request-input">
+                                                <input type="text" name="special_request" 
+                                                    placeholder="Special request..." 
+                                                    value="<?php echo htmlspecialchars($item['cm_request']); ?>" 
+                                                    style="width: 100%; padding: 6px; margin-bottom: 8px;">
+                                            </div>
+
                                             <div class="qty-selector">
                                                 <label>Qty:</label>
                                                 <input type="number" 
@@ -153,12 +167,13 @@
                                                     value="<?php echo $item['cm_quantity']; ?>" 
                                                     min="1" 
                                                     max="99">
+
                                                 <input type="hidden" name="cart_id" value="<?php echo $item['cart_ID']; ?>">
                                                 <input type="hidden" name="menu_id" value="<?php echo $item['menuID']; ?>">
                                                 <button type="submit" name="update_qty" class="btn-update-qty">Update</button>
                                             </div>
                                         </form>
-                                        
+
                                         <form method="POST" style="display: inline;">
                                             <input type="hidden" name="cart_id" value="<?php echo $item['cart_ID']; ?>">
                                             <input type="hidden" name="menu_id" value="<?php echo $item['menuID']; ?>">
