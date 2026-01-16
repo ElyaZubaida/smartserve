@@ -1,7 +1,30 @@
-<!-- 
- Frontend: Elya 
- Backend: Amirah 
- -->
+<?php
+// Include database connection
+include '../config/db_connect.php';
+
+// Fetch menu items from database
+$query = "
+    SELECT 
+        `MENU_ID`, 
+        `MENU_NAME`, 
+        `MENU_IMAGE`, 
+        `MENU_CATEGORY`, 
+        `MENU_DESC`, 
+        `MENU_PRICE`, 
+        `MENU_AVAILABILITY`
+    FROM `MENU`
+    WHERE `IS_DELETED` = 0
+    ORDER BY `created_at` DESC
+";
+
+$result = mysqli_query($conn, $query);
+
+// Check if query was successful
+if (!$result) {
+    die("Query failed: " . mysqli_error($conn));
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +35,6 @@
     <link rel="stylesheet" href="sastyle.css">
 </head>
 <body>
-
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-top">
@@ -23,8 +45,8 @@
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
-                    <li><a href="menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
+                    <li><a href="dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
+                    <li class="active"><a href="menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
                     <li><a href="order_management.php"><span class="material-symbols-outlined">order_approve</span> Orders</a></li>
                     <li><a href="report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
                     <li class="nav-divider"></li>
@@ -35,7 +57,7 @@
         </div>
     </div>
 
-     <!-- Main Content -->
+    <!-- Main Content -->
     <div class="main-content staff-menu-content">
     <main>
         <div class="header">
@@ -50,42 +72,53 @@
         </div>
 
         <div class="staff-menu-grid">
+            <?php 
+            // Check if there are any menu items
+            if (mysqli_num_rows($result) > 0) {
+                // Loop through menu items
+                while ($menu_item = mysqli_fetch_assoc($result)) {
+            ?>
             <div class="staff-menu-card">
                 <div class="staff-menu-img">
-                    <img src="../img/nasilemak.jpg" alt="Nasi Lemak">
+                    <img src="<?php 
+                        echo !empty($menu_item['MENU_IMAGE']) 
+                            ? '../img/' . htmlspecialchars($menu_item['MENU_IMAGE']) 
+                            : '../img/placeholder.jpg'; 
+                    ?>" alt="<?php echo htmlspecialchars($menu_item['MENU_NAME']); ?>">
                 </div>
                 <div class="staff-menu-details">
-                    <span class="staff-menu-category">Rice</span>
-                    <h3>Nasi Lemak</h3>
-                    <p>Yum yum yummy nasi lemak</p>
+                    <span class="staff-menu-category">
+                        <?php echo htmlspecialchars($menu_item['MENU_CATEGORY'] ?? 'Uncategorized'); ?>
+                    </span>
+                    <h3><?php echo htmlspecialchars($menu_item['MENU_NAME']); ?></h3>
+                    <p><?php echo htmlspecialchars($menu_item['MENU_DESC'] ?? 'No description'); ?></p>
                     <div class="staff-menu-footer">
-                        <span class="staff-menu-price">RM 5.00</span>
+                        <span class="staff-menu-price">RM <?php echo number_format($menu_item['MENU_PRICE'], 2); ?></span>
                         <div class="staff-menu-actions">
-                            <a href="updatemenu.php?id=1" class="staff-menu-edit"><span class="material-symbols-outlined">edit</span></a>
+                            <a href="updatemenu.php?id=<?php echo $menu_item['MENU_ID']; ?>" class="staff-menu-edit">
+                                <span class="material-symbols-outlined">edit</span>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="staff-menu-card">
-                <div class="staff-menu-img">
-                    <img src="../img/meegoreng.jpg" alt="Mee Goreng">
-                </div>
-                <div class="staff-menu-details">
-                    <span class="staff-menu-category">Noodles</span>
-                    <h3>Mee Goreng</h3>
-                    <p>Yum yum yummy mee goreng</p>
-                    <div class="staff-menu-footer">
-                        <span class="staff-menu-price">RM 4.50</span>
-                        <div class="staff-menu-actions">
-                            <a href="editmenu.php?id=2" class="staff-menu-edit"><span class="material-symbols-outlined">edit</span></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <?php 
+                }
+            } else {
+                // Display message if no menu items found
+                echo '<div class="empty-state">
+                        <h3>No Menu Items Found</h3>
+                        <p>Click "Add Menu" to create your first menu item.</p>
+                      </div>';
+            }
+            ?>
         </div>
     </main>
 </div>
-</body>
 
+<?php
+// Close database connection
+mysqli_close($conn);
+?>
+</body>
 </html>

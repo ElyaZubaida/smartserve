@@ -1,11 +1,9 @@
 <?php
-// Database connection
-include('../databaseconnect.php');
+// Start session for messaging
+session_start();
 
-// Check connection
-if (!$connection) {
-    die('Database connection failed: ' . mysqli_connect_error());
-}
+// Include database connection
+include '../config/db_connect.php';
 
 // Check if form submitted via POST
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -15,32 +13,49 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Validate data
     if ($order_id == 0 || empty($status)) {
-        header("Location: order_details.php?id=" . $order_id . "&error=1");
+        $_SESSION['error_message'] = "Invalid order ID or status.";
+        header("Location: s_orderdetails.php?id=" . $order_id);
+        exit;
+    }
+
+    // Allowed status values
+    $allowed_statuses = [
+        'Pending', 
+        'Preparing', 
+        'Ready for Pickup', 
+        'Completed', 
+        'Cancelled'
+    ];
+
+    if (!in_array($status, $allowed_statuses)) {
+        $_SESSION['error_message'] = "Invalid order status.";
+        header("Location: s_orderdetails.php?id=" . $order_id);
         exit;
     }
 
     // Update order status in database
-    $query = "UPDATE orders SET status = ? WHERE order_id = ?";
-    $stmt = mysqli_prepare($connection, $query);
-    mysqli_stmt_bind_param($stmt, "si", $status, $order_id);
+    $query = "UPDATE `ORDER` SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("si", $status, $order_id);
     
-    if (mysqli_stmt_execute($stmt)) {
-        // Success - redirect back with success message
-        mysqli_stmt_close($stmt);
-        mysqli_close($connection);
-        header("Location: order_details.php?id=" . $order_id . "&success=1");
+    if ($stmt->execute()) {
+        // Success
+        $_SESSION['success_message'] = "Order status updated successfully.";
+        $stmt->close();
+        $conn->close();
+        header("Location: s_orderdetails.php?id=" . $order_id);
         exit;
     } else {
-        // Error - redirect back with error message
-        mysqli_stmt_close($stmt);
-        mysqli_close($connection);
-        header("Location: order_details.php?id=" . $order_id . "&error=1");
+        // Error
+        $_SESSION['error_message'] = "Failed to update order status.";
+        $stmt->close();
+        $conn->close();
+        header("Location: s_orderdetails.php?id=" . $order_id);
         exit;
     }
 } else {
-    // If someone tries to access this file directly (not via POST)
-    // Redirect to order management page
-    mysqli_close($connection);
+    // If accessed directly
+    $conn->close();
     header("Location: order_management.php");
     exit;
 }
