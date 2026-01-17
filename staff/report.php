@@ -32,7 +32,11 @@ $query = "
         o.order_amountPaid,
         o.order_status,
         s.student_name,
-        st.staffName,
+        CASE 
+            WHEN o.staffID IS NOT NULL THEN CONCAT(st.staffName, ' (Staff)')
+            WHEN o.admin_ID IS NOT NULL THEN CONCAT(a.admin_name, ' (Admin)')
+            ELSE '-'
+        END AS updated_by,
         GROUP_CONCAT(m.menuName SEPARATOR ', ') AS menu_items,
         SUM(om.om_quantity) AS total_qty
     FROM 
@@ -41,6 +45,8 @@ $query = "
         students s ON o.student_ID = s.student_ID
     LEFT JOIN 
         staff st ON o.staffID = st.staffID
+    LEFT JOIN
+        admins a ON o.admin_ID = a.admin_ID
     JOIN 
         order_menu om ON o.order_ID = om.order_ID
     JOIN 
@@ -204,7 +210,7 @@ $total_sales = mysqli_fetch_assoc($sales_result)['total_sales'] ?? 0;
                             <th>Qty</th>
                             <th>Total</th>
                             <th>Status</th>
-                            <th>Staff</th>
+                            <th>Updated By</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -230,7 +236,7 @@ $total_sales = mysqli_fetch_assoc($sales_result)['total_sales'] ?? 0;
                                     ?>
                                     <span class="status-badge <?php echo $status_class; ?>"><?php echo $row['order_status']; ?></span>
                                 </td>
-                                <td><?php echo $row['staffName'] ? htmlspecialchars($row['staffName']) : '-'; ?></td>
+                                <td><?php echo htmlspecialchars($row['updated_by']); ?></td>
                             </tr>
                             <?php endwhile; ?>
                         <?php else: ?>

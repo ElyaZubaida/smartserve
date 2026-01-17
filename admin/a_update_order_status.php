@@ -1,21 +1,22 @@
 <?php
 session_start();
-
-if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
-    header("Location: ../login.php");
+// Check if admin is logged in
+if (!isset($_SESSION['admin_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: loginadmin.php");
     exit;
 }
+
 
 include '../config/db_connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $order_id = isset($_POST['order_ID']) ? intval($_POST['order_ID']) : 0;
     $status = isset($_POST['status']) ? $_POST['status'] : '';
-    $staff_id = $_SESSION['staff_id'];
+    $admin_id = $_SESSION['admin_id'];
 
     if ($order_id == 0 || empty($status)) {
         $_SESSION['error_message'] = "Invalid order ID or status.";
-        header("Location: s_orderdetails.php?id=" . $order_id);
+        header("Location: a_orderdetails.php?id=" . $order_id);
         exit;
     }
 
@@ -30,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($current_order['order_status'] == 'Completed' || $current_order['order_status'] == 'Cancelled') {
         $_SESSION['error_message'] = "This order is " . strtolower($current_order['order_status']) . " and cannot be changed.";
-        header("Location: s_orderdetails.php?id=" . $order_id);
+        header("Location: a_orderdetails.php?id=" . $order_id);
         exit;
     }
 
@@ -45,14 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if (!in_array($status, $allowed_statuses)) {
         $_SESSION['error_message'] = "Invalid order status.";
-        header("Location: s_orderdetails.php?id=" . $order_id);
+        header("Location: a_orderdetails.php?id=" . $order_id);
         exit;
     }
 
-    // Update order status AND staffID
-    $query = "UPDATE `orders` SET order_status = ?, staffID = ?, admin_ID = NULL WHERE order_ID = ?";
+    // Update order status AND admin_ID
+    $query = "UPDATE `orders` SET order_status = ?, admin_ID = ?, staffID = NULL WHERE order_ID = ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("sii", $status, $staff_id, $order_id);
+    $stmt->bind_param("sii", $status, $admin_id, $order_id);
     
     if ($stmt->execute()) {
         $_SESSION['order_status_updated'] = true;
@@ -63,12 +64,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     $stmt->close();
     $conn->close();
-    header("Location: s_orderdetails.php?id=" . $order_id);
+    header("Location: a_orderdetails.php?id=" . $order_id);
     exit;
     
 } else {
     $conn->close();
-    header("Location: order_management.php");
+    header("Location: a_order_management.php");
     exit;
 }
 ?>

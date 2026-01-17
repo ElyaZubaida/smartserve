@@ -1,6 +1,6 @@
 <!-- 
  Frontend: Insyirah 
- Backend: Amirah, Qis
+ Backend: Amirah
  -->
 <?php
 session_start();

@@ -1,8 +1,96 @@
 <?php
 session_start();
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header('Location: a_dashboard.php?error=unauthorized');
+
+// Check if admin is logged in
+if (!isset($_SESSION['admin_id']) || $_SESSION['role'] !== 'admin') {
+    header('Location: loginadmin.php');
     exit();
+}
+
+include '../config/db_connect.php';
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $fullname = trim($_POST['fullname']);
+    $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
+    $role = trim($_POST['role']);
+    $admin_id = $_SESSION['admin_id'];
+
+    // Validate inputs
+    if (empty($fullname) || empty($username) || empty($email) || empty($password) || empty($role)) {
+        $error_message = 'All fields are required';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error_message = 'Invalid email format';
+    } else {
+        // Hash password using MD5 to match existing system
+        $hashed_password = md5($password);
+
+        // Check if username or email already exists (excluding soft-deleted users)
+        $check_queries = [
+            "SELECT admin_username FROM admins WHERE (admin_username = ? OR admin_email = ?) AND is_deleted = 0",
+            "SELECT staffUsername FROM staff WHERE (staffUsername = ? OR staffEmail = ?) AND is_deleted = 0",
+            "SELECT student_username FROM students WHERE (student_username = ? OR student_email = ?) AND is_deleted = 0"
+        ];
+
+        $username_exists = false;
+        foreach ($check_queries as $check_query) {
+            $stmt = mysqli_prepare($conn, $check_query);
+            mysqli_stmt_bind_param($stmt, "ss", $username, $email);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            if (mysqli_num_rows($result) > 0) {
+                $username_exists = true;
+                mysqli_stmt_close($stmt);
+                break;
+            }
+            mysqli_stmt_close($stmt);
+        }
+
+        if ($username_exists) {
+            $error_message = 'Username or email already exists';
+        } else {
+            // Insert based on role
+            $success = false;
+            
+            if ($role === 'admin') {
+                $query = "INSERT INTO admins (admin_name, admin_email, admin_username, admin_password) VALUES (?, ?, ?, ?)";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, "ssss", $fullname, $email, $username, $hashed_password);
+                $success = mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            } 
+            elseif ($role === 'staff') {
+                $query = "INSERT INTO staff (admin_ID, staffName, staffEmail, staffUsername, staffPassword) VALUES (?, ?, ?, ?, ?)";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, "issss", $admin_id, $fullname, $email, $username, $hashed_password);
+                $success = mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            } 
+            elseif ($role === 'student') {
+                $query = "INSERT INTO students (admin_ID, student_name, student_email, student_username, student_password) VALUES (?, ?, ?, ?, ?)";
+                $stmt = mysqli_prepare($conn, $query);
+                mysqli_stmt_bind_param($stmt, "issss", $admin_id, $fullname, $email, $username, $hashed_password);
+                $success = mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            }
+
+            if ($success) {
+                $_SESSION['success_message'] = ucfirst($role) . ' account created successfully!';
+                header('Location: user_management.php');
+                exit();
+            } else {
+                $error_message = 'Failed to create account: ' . mysqli_error($conn);
+            }
+        }
+    }
+}
+
+// Check for error message from session
+if (isset($_SESSION['error_message'])) {
+    $error_message = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
 }
 ?>
 
@@ -26,14 +114,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="a_dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
+                    <li><a href="a_dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
                     <li><a href="a_menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
-                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Order Management</a></li>
-                    <li><a href="user_management.php"><span class="material-symbols-outlined">manage_accounts</span> User Management</a></li>
+                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Orders</a></li>
+                    <li class="active"><a href="user_management.php"><span class="material-symbols-outlined">manage_accounts</span> User Management</a></li>
                     <li><a href="a_report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
                     <li class="nav-divider"></li>
-                    <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
-                    <li><a href="../logout.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
+                    <li><a href="a_profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
+                    <li><a href="logoutadmin.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
                 </ul>
             </nav>
         </div>
@@ -50,8 +138,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         </a>
     </div>
 
+    <?php if (isset($error_message)): ?>
+    <div class="alert alert-error">
+        <span class="material-symbols-outlined">error</span>
+        <?php echo htmlspecialchars($error_message); ?>
+    </div>
+    <?php endif; ?>
+
     <div class="update-form-container">
-        <form action="a_insert_user.php" method="POST" class="staff-update-form">
+        <form action="adduser.php" method="POST" class="staff-update-form">
             <div class="form-inputs">
                 <div class="input-group">
                     <label>Full Name</label>
@@ -93,5 +188,25 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         </form>
     </div>
 </div>
+
+<style>
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+</style>
 </body>
 </html>
+
+<?php
+mysqli_close($conn);
+?>

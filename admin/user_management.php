@@ -1,24 +1,53 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    header('Location: a_dashboard.php?error=unauthorized');
+// Check if admin is logged in
+if (!isset($_SESSION['admin_id']) || $_SESSION['role'] !== 'admin') {
+    header('Location: loginadmin.php');
     exit();
 }
 
-$current_page = basename($_SERVER['PHP_SELF']);
-$user_role = $_SESSION['role'];
+include '../config/db_connect.php';
 
-// Dummy Data 
-$all_users = [
-    ['id' => 1, 'username' => 'admin_main', 'fullname' => 'Super Admin', 'email' => 'admin@smartserve.com', 'role' => 'Admin'],
-    ['id' => 2, 'username' => 'staff_Qai', 'fullname' => 'Qai binti Yuyu', 'email' => 'Qai@smartserve.com', 'role' => 'Staff'],
-    ['id' => 3, 'username' => 'staff_amirah', 'fullname' => 'Amirah James', 'email' => 'amirah@smartserve.com', 'role' => 'Staff'],
-    ['id' => 4, 'username' => 'aleesya', 'fullname' => 'Aleesya binti Aleesya', 'email' => 'aleesya@student.com', 'role' => 'Customer'],
-    ['id' => 5, 'username' => 'staff_qis', 'fullname' => 'Qis binti Haykal', 'email' => 'qis@smartserve.com', 'role' => 'Staff'],
-    ['id' => 6, 'username' => 'Firzanah', 'fullname' => 'Firzanah binti Pirjanah', 'email' => 'Firzanah@student.com', 'role' => 'Customer'],
-    ['id' => 7, 'username' => 'staff_Mina', 'fullname' => 'Syamina bin Mina', 'email' => 'Mina@smartserve.com', 'role' => 'Staff']
-];
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// Fetch all users from database
+$all_users = [];
+
+// Fetch admins (exclude soft-deleted)
+$admin_query = "SELECT admin_ID as id, admin_name as fullname, admin_username as username, admin_email as email, 'Admin' as role FROM admins WHERE is_deleted = 0 ORDER BY admin_ID";
+$admin_result = mysqli_query($conn, $admin_query);
+while ($row = mysqli_fetch_assoc($admin_result)) {
+    $all_users[] = $row;
+}
+
+// Fetch staff (exclude soft-deleted)
+$staff_query = "SELECT staffID as id, staffName as fullname, staffUsername as username, staffEmail as email, 'Staff' as role FROM staff WHERE is_deleted = 0 ORDER BY staffID";
+$staff_result = mysqli_query($conn, $staff_query);
+while ($row = mysqli_fetch_assoc($staff_result)) {
+    $all_users[] = $row;
+}
+
+// Fetch students (customers) (exclude soft-deleted)
+$student_query = "SELECT student_ID as id, student_name as fullname, student_username as username, student_email as email, 'Customer' as role FROM students WHERE is_deleted = 0 ORDER BY student_ID";
+$student_result = mysqli_query($conn, $student_query);
+while ($row = mysqli_fetch_assoc($student_result)) {
+    $all_users[] = $row;
+}
+
+// Check for success message
+$success_message = '';
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
+
+// Check for error message
+$error_message = '';
+if (isset($_SESSION['error_message'])) {
+    $error_message = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -43,12 +72,12 @@ $all_users = [
                 <ul>
                     <li><a href="a_dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
                     <li><a href="a_menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
-                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Order Management</a></li>
+                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Orders</a></li>
                     <li class="active"><a href="user_management.php"><span class="material-symbols-outlined">manage_accounts</span> User Management</a></li>
                     <li><a href="a_report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
                     <li class="nav-divider"></li>
-                    <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
-                    <li><a href="../logout.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
+                    <li><a href="a_profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
+                    <li><a href="logoutadmin.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
                 </ul>
             </nav>
         </div>
@@ -64,6 +93,20 @@ $all_users = [
                 <span class="material-symbols-outlined">person_add</span> Add Users
             </a>
         </div>
+
+        <?php if ($success_message): ?>
+        <div class="alert alert-success">
+            <span class="material-symbols-outlined">check_circle</span>
+            <?php echo htmlspecialchars($success_message); ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($error_message): ?>
+        <div class="alert alert-error">
+            <span class="material-symbols-outlined">error</span>
+            <?php echo htmlspecialchars($error_message); ?>
+        </div>
+        <?php endif; ?>
 
         <div class="report-table-container">
             <table class="report-table">
@@ -81,24 +124,24 @@ $all_users = [
                     <?php foreach($all_users as $user): ?>
                     <tr>
                         <td><?php echo str_pad($user['id'], 3, '0', STR_PAD_LEFT); ?></td>
-                        <td><strong><?php echo $user['fullname']; ?></strong></td>
+                        <td><strong><?php echo htmlspecialchars($user['fullname']); ?></strong></td>
                         <td>
                             <?php 
                                 $roleClass = 'role-' . strtolower($user['role']);
                             ?>
                             <span class="role-badge <?php echo $roleClass; ?>">
-                                <?php echo $user['role']; ?>
+                                <?php echo htmlspecialchars($user['role']); ?>
                             </span>
                         </td>
-                        <td><?php echo $user['username']; ?></td>
-                        <td><?php echo $user['email']; ?></td>
+                        <td><?php echo htmlspecialchars($user['username']); ?></td>
+                        <td><?php echo htmlspecialchars($user['email']); ?></td>
                         <td>
                             <div class="staff-menu-actions">
-                                <a href="updateusers.php?id=<?php echo $user['id']; ?>" class="staff-menu-edit">
+                                <a href="updateusers.php?id=<?php echo $user['id']; ?>&role=<?php echo strtolower($user['role']); ?>" class="staff-menu-edit">
                                     <span class="material-symbols-outlined">edit</span>
                                 </a>
-                                <?php if($user['username'] !== $_SESSION['username']): ?>
-                                    <a href="deleteuser.php?id=<?php echo $user['id']; ?>" class="staff-menu-edit" style="color: #d32f2f;" onclick="return confirm('Delete this account?')">
+                                <?php if($user['username'] !== $_SESSION['admin_username']): ?>
+                                    <a href="deleteuser.php?id=<?php echo $user['id']; ?>&role=<?php echo strtolower($user['role']); ?>" class="staff-menu-edit" style="color: #d32f2f;" onclick="return confirm('Are you sure you want to delete this account? This action cannot be undone.')">
                                         <span class="material-symbols-outlined">delete</span>
                                     </a>
                                 <?php endif; ?>
@@ -110,5 +153,48 @@ $all_users = [
             </table>
         </div>
     </div>
+
+    <style>
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .role-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .role-admin {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        .role-staff {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        .role-customer {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+    </style>
 </body>
 </html>
+
+<?php
+mysqli_close($conn);
+?>
