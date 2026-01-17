@@ -3,17 +3,50 @@
  Backend: Amirah 
  -->
 
+<?php
+session_start();
+
+// Check if admin is logged in
+if (!isset($_SESSION['admin_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: loginadmin.php");
+    exit;
+}
+// Include database connection
+include '../config/db_connect.php';
+
+// Fetch menu items from database
+$query = "
+    SELECT 
+        `menuID`, 
+        `menuName`, 
+        `menuImage`, 
+        `menuCategory`, 
+        `menuDescription`, 
+        `menuPrice`, 
+        `menuAvailability`
+    FROM `menus`
+    WHERE `is_deleted` = 0
+    ORDER BY `created_at` DESC
+";
+
+$result = mysqli_query($conn, $query);
+
+// Check if query was successful
+if (!$result) {
+    die("Query failed: " . mysqli_error($conn));
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartServe - Staff Menu Management</title>
+    <title>SmartServe - Menu Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="../staff/sastyle.css">
 </head>
 <body>
-
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-top">
@@ -22,22 +55,22 @@
                 <h3>Smart<span>Serve</span></h3>
             </div>
 
-           <nav class="sidebar-nav">
+            <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="a_dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
-                    <li><a href="a_menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
-                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Order Management</a></li>
+                    <li><a href="a_dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
+                    <li class="active"><a href="a_menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
+                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Orders</a></li>
                     <li><a href="user_management.php"><span class="material-symbols-outlined">manage_accounts</span> User Management</a></li>
                     <li><a href="a_report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
                     <li class="nav-divider"></li>
-                    <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
-                    <li><a href="../logout.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
+                    <li><a href="a_profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
+                    <li><a href="logoutadmin.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
                 </ul>
             </nav>
         </div>
     </div>
 
-     <!-- Main Content -->
+    <!-- Main Content -->
     <div class="main-content staff-menu-content">
     <main>
         <div class="header">
@@ -52,42 +85,53 @@
         </div>
 
         <div class="staff-menu-grid">
+            <?php 
+            // Check if there are any menu items
+            if (mysqli_num_rows($result) > 0) {
+                // Loop through menu items
+                while ($menu_item = mysqli_fetch_assoc($result)) {
+            ?>
             <div class="staff-menu-card">
                 <div class="staff-menu-img">
-                    <img src="../img/nasilemak.jpg" alt="Nasi Lemak">
+                    <img src="<?php 
+                        echo !empty($menu_item['menuImage']) 
+                            ? '../img/' . htmlspecialchars($menu_item['menuImage']) 
+                            : '../img/placeholder.jpg'; 
+                    ?>" alt="<?php echo htmlspecialchars($menu_item['menuName']); ?>">
                 </div>
                 <div class="staff-menu-details">
-                    <span class="staff-menu-category">Rice</span>
-                    <h3>Nasi Lemak</h3>
-                    <p>Yum yum yummy nasi lemak</p>
+                    <span class="staff-menu-category">
+                        <?php echo htmlspecialchars($menu_item['menuCategory'] ?? 'Uncategorized'); ?>
+                    </span>
+                    <h3><?php echo htmlspecialchars($menu_item['menuName']); ?></h3>
+                    <p><?php echo htmlspecialchars($menu_item['menuDescription'] ?? 'No description'); ?></p>
                     <div class="staff-menu-footer">
-                        <span class="staff-menu-price">RM 5.00</span>
+                        <span class="staff-menu-price">RM <?php echo number_format($menu_item['menuPrice'], 2); ?></span>
                         <div class="staff-menu-actions">
-                            <a href="a_updatemenu.php?id=1" class="staff-menu-edit"><span class="material-symbols-outlined">edit</span></a>
+                            <a href="a_updatemenu.php?id=<?php echo $menu_item['menuID']; ?>" class="staff-menu-edit">
+                                <span class="material-symbols-outlined">edit</span>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="staff-menu-card">
-                <div class="staff-menu-img">
-                    <img src="../img/meegoreng.jpg" alt="Mee Goreng">
-                </div>
-                <div class="staff-menu-details">
-                    <span class="staff-menu-category">Noodles</span>
-                    <h3>Mee Goreng</h3>
-                    <p>Yum yum yummy mee goreng</p>
-                    <div class="staff-menu-footer">
-                        <span class="staff-menu-price">RM 4.50</span>
-                        <div class="staff-menu-actions">
-                            <a href="editmenu.php?id=2" class="staff-menu-edit"><span class="material-symbols-outlined">edit</span></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <?php 
+                }
+            } else {
+                // Display message if no menu items found
+                echo '<div class="empty-state">
+                        <h3>No Menu Items Found</h3>
+                        <p>Click "Add Menu" to create your first menu item.</p>
+                      </div>';
+            }
+            ?>
         </div>
     </main>
 </div>
-</body>
 
+<?php
+// Close database connection
+mysqli_close($conn);
+?>
+</body>
 </html>

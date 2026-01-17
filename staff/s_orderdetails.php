@@ -1,3 +1,7 @@
+<!-- 
+ Frontend: Elya 
+ Backend: Amirah
+ -->
 <?php
 session_start();
 
@@ -35,6 +39,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $order_id = mysqli_real_escape_string($conn, $_GET['id']);
 
 // Fetch order details (added staff name who updated)
+// Fetch order details - check both staff AND admin who updated
 $query = "
     SELECT 
         o.order_ID, 
@@ -43,13 +48,19 @@ $query = "
         o.order_totalAmount,
         o.updated_at,
         s.student_name,
-        st.staffName AS updated_by
+        CASE 
+            WHEN o.staffID IS NOT NULL THEN CONCAT(st.staffName, ' (Staff)')
+            WHEN o.admin_ID IS NOT NULL THEN CONCAT(a.admin_name, ' (Admin)')
+            ELSE NULL
+        END AS updated_by
     FROM 
         orders o
     JOIN 
         students s ON o.student_ID = s.student_ID
     LEFT JOIN
         staff st ON o.staffID = st.staffID
+    LEFT JOIN
+        admins a ON o.admin_ID = a.admin_ID
     WHERE 
         o.order_ID = '$order_id'
 ";
