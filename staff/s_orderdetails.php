@@ -1,5 +1,29 @@
 <?php
 session_start();
+
+// Check if staff is logged in
+if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
+    header("Location: ../login.php");
+    exit;
+}
+
+// Check for the success flag immediately and clear it
+$showUpdateSuccess = false;
+if (isset($_SESSION['order_status_updated'])) {
+    $showUpdateSuccess = true;
+    unset($_SESSION['order_status_updated']);
+    unset($_SESSION['success_message']);
+}
+
+// Check for error message
+$showError = false;
+$errorMessage = '';
+if (isset($_SESSION['error_message'])) {
+    $showError = true;
+    $errorMessage = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+}
+
 // Include database connection
 include '../config/db_connect.php';
 
@@ -10,37 +34,42 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $order_id = mysqli_real_escape_string($conn, $_GET['id']);
 
-// Fetch order details
+// Fetch order details (added staff name who updated)
 $query = "
     SELECT 
-        `ORDER`.`ORDER_ID`, 
-        `ORDER`.`ORDER_DATE`, 
-        `ORDER`.`ORDER_STATUS`, 
-        `ORDER`.`ORDER_TOTAMOUNT`,
-        `STUDENT`.`STUDENT_NAME`
+        o.order_ID, 
+        o.order_date, 
+        o.order_status, 
+        o.order_totalAmount,
+        o.updated_at,
+        s.student_name,
+        st.staffName AS updated_by
     FROM 
-        `ORDER`
+        orders o
     JOIN 
-        `STUDENT` ON `ORDER`.`STUDENT_ID` = `STUDENT`.`STUDENT_ID`
+        students s ON o.student_ID = s.student_ID
+    LEFT JOIN
+        staff st ON o.staffID = st.staffID
     WHERE 
-        `ORDER`.`ORDER_ID` = '$order_id'
+        o.order_ID = '$order_id'
 ";
 
 $order_result = mysqli_query($conn, $query);
 
-// Fetch order items
+// Fetch order items (added request)
 $items_query = "
     SELECT 
-        `MENU`.`MENU_NAME`, 
-        `ORDER_MENU`.`OM_QUANTITY`, 
-        `MENU`.`MENU_PRICE`,
-        (`ORDER_MENU`.`OM_QUANTITY` * `MENU`.`MENU_PRICE`) AS subtotal
+        m.menuName, 
+        om.om_quantity, 
+        m.menuPrice,
+        om.request,
+        (om.om_quantity * m.menuPrice) AS subtotal
     FROM 
-        `ORDER_MENU`
+        order_menu om
     JOIN 
-        `MENU` ON `ORDER_MENU`.`MENU_ID` = `MENU`.`MENU_ID`
+        menus m ON om.menuID = m.menuID
     WHERE 
-        `ORDER_MENU`.`ORDER_ID` = '$order_id'
+        om.order_ID = '$order_id'
 ";
 
 $items_result = mysqli_query($conn, $items_query);
@@ -61,47 +90,6 @@ $order = mysqli_fetch_assoc($order_result);
     <title>SmartServe - Staff Order Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="sastyle.css">
-    <style>
-    /* Modal Styles */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.4);
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-content {
-        background-color: #2e7d32;
-        color: white;
-        padding: 30px;
-        border-radius: 10px;
-        text-align: center;
-        max-width: 400px;
-        width: 90%;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .modal-content h2 {
-        margin-bottom: 20px;
-    }
-
-    .close-btn {
-        background-color: white;
-        color: #2e7d32;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 15px;
-    }
-</style>
 </head>
 <body>
 
@@ -131,8 +119,8 @@ $order = mysqli_fetch_assoc($order_result);
     <div class="main-content orders-menu-content">
         <div class="header">
             <div class="title">
-                <h2>Order Details: #<?php echo htmlspecialchars($order['ORDER_ID']); ?></h2>
-                <p>Customer: <?php echo htmlspecialchars($order['STUDENT_NAME']); ?></p>
+                <h2>Order Details: #<?php echo htmlspecialchars($order['order_ID']); ?></h2>
+                <p>Customer: <?php echo htmlspecialchars($order['student_name']); ?></p>
             </div>
             <a href="order_management.php" class="btn-back">
                 <span class="material-symbols-outlined">arrow_back</span> Back to List
@@ -159,11 +147,17 @@ $order = mysqli_fetch_assoc($order_result);
                         <tr>
                             <td>
                                 <div class="item-info">
-                                    <strong><?php echo htmlspecialchars($item['MENU_NAME']); ?></strong>
+                                    <strong><?php echo htmlspecialchars($item['menuName']); ?></strong>
+                                    <?php if (!empty($item['request'])): ?>
+                                    <span class="special-request">
+                                        <span class="material-symbols-outlined">notes</span>
+                                        Request: <?php echo htmlspecialchars($item['request']); ?>
+                                    </span>
+                                    <?php endif; ?>
                                 </div>
                             </td>
-                            <td><?php echo htmlspecialchars($item['OM_QUANTITY']); ?></td>
-                            <td>RM <?php echo number_format($item['MENU_PRICE'], 2); ?></td>
+                            <td><?php echo htmlspecialchars($item['om_quantity']); ?></td>
+                            <td>RM <?php echo number_format($item['menuPrice'], 2); ?></td>
                         </tr>
                         <?php } ?>
                     </tbody>
@@ -172,26 +166,76 @@ $order = mysqli_fetch_assoc($order_result);
 
             <div class="order-status-card">
                 <h3>Manage Status</h3>
+                
+                <?php 
+                // Check if status is final (cannot be changed)
+                $is_final = ($order['order_status'] == 'Completed' || $order['order_status'] == 'Cancelled');
+                ?>
+                
                 <form method="POST" action="update_order_status.php">
-                    <input type="hidden" name="order_id" value="<?php echo $order['ORDER_ID']; ?>">
+                    <input type="hidden" name="order_ID" value="<?php echo $order['order_ID']; ?>">
                     <div class="profile-form-group">
                         <label>Current Status</label>
-                        <select name="status" class="input-field status-select">
-                            <option value="Pending" <?php echo ($order['ORDER_STATUS'] == 'Pending') ? 'selected' : ''; ?>>Pending</option>
-                            <option value="Preparing" <?php echo ($order['ORDER_STATUS'] == 'Preparing') ? 'selected' : ''; ?>>Preparing</option>
-                            <option value="Ready for Pickup" <?php echo ($order['ORDER_STATUS'] == 'Ready for Pickup') ? 'selected' : ''; ?>>Ready For Pickup</option>
-                            <option value="Completed" <?php echo ($order['ORDER_STATUS'] == 'Completed') ? 'selected' : ''; ?>>Completed</option>
-                            <option value="Cancelled" <?php echo ($order['ORDER_STATUS'] == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
-                        </select>
+                        
+                        <?php if ($is_final): ?>
+                            <!-- Status is final - show disabled dropdown -->
+                            <select class="input-field status-select" disabled>
+                                <option selected><?php echo $order['order_status']; ?></option>
+                            </select>
+                            <p class="status-locked-msg">
+                                <span class="material-symbols-outlined">lock</span>
+                                This order is <?php echo strtolower($order['order_status']); ?> and cannot be changed.
+                            </p>
+                        <?php else: ?>
+                            <!-- Status can be changed -->
+                            <select name="status" class="input-field status-select">
+                                <option value="Pending" <?php echo ($order['order_status'] == 'Pending') ? 'selected' : ''; ?>>Pending</option>
+                                <option value="Preparing" <?php echo ($order['order_status'] == 'Preparing') ? 'selected' : ''; ?>>Preparing</option>
+                                <option value="Ready for Pickup" <?php echo ($order['order_status'] == 'Ready for Pickup') ? 'selected' : ''; ?>>Ready For Pickup</option>
+                                <option value="Completed" <?php echo ($order['order_status'] == 'Completed') ? 'selected' : ''; ?>>Completed</option>
+                                <option value="Cancelled" <?php echo ($order['order_status'] == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
+                            </select>
+                        <?php endif; ?>
                     </div>
-                    <button type="submit" class="btn-update">Update Status</button>
+                    
+                    <?php if (!$is_final): ?>
+                        <button type="submit" class="btn-update">Update Status</button>
+                    <?php endif; ?>
                 </form>
                 
                 <div class="order-info-footer">
-                    <p><strong>Order Time:</strong> <?php echo date('h:i A', strtotime($order['ORDER_DATE'])); ?></p>
-                    <p><strong>Total Amount:</strong> RM <?php echo number_format($order['ORDER_TOTAMOUNT'], 2); ?></p>
+                    <p><strong>Order Time:</strong> <?php echo date('h:i A', strtotime($order['order_date'])); ?></p>
+                    <p><strong>Total Amount:</strong> RM <?php echo number_format($order['order_totalAmount'], 2); ?></p>
+                    
+                    <!-- Display who last updated the order -->
+                    <div class="updated-by">
+                        <?php if (!empty($order['updated_by'])): ?>
+                            <p><strong>Last Updated By:</strong> <?php echo htmlspecialchars($order['updated_by']); ?></p>
+                            <p><strong>Updated At:</strong> <?php echo date('d M Y, h:i A', strtotime($order['updated_at'])); ?></p>
+                        <?php else: ?>
+                            <p><strong>Status:</strong> Not yet updated by staff</p>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <span class="material-symbols-outlined">check_circle</span>
+            <h2>Status Updated Successfully</h2>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content error">
+            <span class="material-symbols-outlined">error</span>
+            <h2 id="errorMessage">Error</h2>
+            <button class="close-btn" onclick="closeErrorModal()">Close</button>
         </div>
     </div>
 
@@ -199,58 +243,66 @@ $order = mysqli_fetch_assoc($order_result);
         const statusSelect = document.querySelector('.status-select');
 
         function updateDropdownColor() {
-            statusSelect.classList.remove('status-pending', 'status-preparing', 'status-ready', 'status-completed', 'status-cancelled');
+            if (!statusSelect) return;
+            statusSelect.classList.remove('status-pending', 'status-preparing', 'status-ready-for-pickup', 'status-completed', 'status-cancelled');
             const status = statusSelect.value.toLowerCase().replace(/\s+/g, '-'); 
             statusSelect.classList.add('status-' + status);
         }
 
-        window.onload = updateDropdownColor;
-        statusSelect.addEventListener('change', updateDropdownColor);
+        if (statusSelect) {
+            window.onload = updateDropdownColor;
+            statusSelect.addEventListener('change', updateDropdownColor);
+        }
+
+        function showSuccessModal() {
+            document.getElementById('successModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').style.display = 'none';
+        }
+
+        function showErrorModal(message) {
+            document.getElementById('errorMessage').innerText = message;
+            document.getElementById('errorModal').style.display = 'flex';
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const successModal = document.getElementById('successModal');
+            const errorModal = document.getElementById('errorModal');
+            if (event.target == successModal) {
+                successModal.style.display = 'none';
+            }
+            if (event.target == errorModal) {
+                errorModal.style.display = 'none';
+            }
+        }
     </script>
 
-    <?php
-// Check for success message
-if (isset($_SESSION['success_message'])) {
-    echo "<script>
+    <?php if ($showUpdateSuccess): ?>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
-            showSuccessModal('" . $_SESSION['success_message'] . "');
+            showSuccessModal();
         });
-    </script>";
-    // Clear the session message
-    unset($_SESSION['success_message']);
-}
-?>
+    </script>
+    <?php endif; ?>
 
-<div id="successModal" class="modal">
-    <div class="modal-content">
-        <h2>Status Updated Successfully</h2>
-        <button class="close-btn" onclick="closeModal()">Close</button>
-    </div>
-</div>
+    <?php if ($showError): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showErrorModal('<?php echo addslashes($errorMessage); ?>');
+        });
+    </script>
+    <?php endif; ?>
 
-<script>
-    function showSuccessModal(message) {
-        const modal = document.getElementById('successModal');
-        modal.style.display = 'flex';
-    }
-
-    function closeModal() {
-        const modal = document.getElementById('successModal');
-        modal.style.display = 'none';
-    }
-
-    // Close modal if clicked outside
-    window.onclick = function(event) {
-        const modal = document.getElementById('successModal');
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
-    }
-</script>
 </body>
 </html>
 
 <?php
-// Close database connection
 mysqli_close($conn);
 ?>

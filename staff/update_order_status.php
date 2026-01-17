@@ -1,19 +1,35 @@
 <?php
-// Start session for messaging
 session_start();
 
-// Include database connection
+if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
+    header("Location: ../login.php");
+    exit;
+}
+
 include '../config/db_connect.php';
 
-// Check if form submitted via POST
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Get form data
-    $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
+    $order_id = isset($_POST['order_ID']) ? intval($_POST['order_ID']) : 0;
     $status = isset($_POST['status']) ? $_POST['status'] : '';
+    $staff_id = $_SESSION['staff_id'];
 
-    // Validate data
     if ($order_id == 0 || empty($status)) {
         $_SESSION['error_message'] = "Invalid order ID or status.";
+        header("Location: s_orderdetails.php?id=" . $order_id);
+        exit;
+    }
+
+    // Check current status - prevent changes if already Completed or Cancelled
+    $check_query = "SELECT order_status FROM orders WHERE order_ID = ?";
+    $check_stmt = $conn->prepare($check_query);
+    $check_stmt->bind_param("i", $order_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    $current_order = $check_result->fetch_assoc();
+    $check_stmt->close();
+
+    if ($current_order['order_status'] == 'Completed' || $current_order['order_status'] == 'Cancelled') {
+        $_SESSION['error_message'] = "This order is " . strtolower($current_order['order_status']) . " and cannot be changed.";
         header("Location: s_orderdetails.php?id=" . $order_id);
         exit;
     }
@@ -33,28 +49,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit;
     }
 
-    // Update order status in database
-    $query = "UPDATE `ORDER` SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
+    // Update order status AND staffID
+    $query = "UPDATE `orders` SET order_status = ?, staffID = ? WHERE order_ID = ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("si", $status, $order_id);
+    $stmt->bind_param("sii", $status, $staff_id, $order_id);
     
     if ($stmt->execute()) {
-        // Success
+        $_SESSION['order_status_updated'] = true;
         $_SESSION['success_message'] = "Order status updated successfully.";
-        $stmt->close();
-        $conn->close();
-        header("Location: s_orderdetails.php?id=" . $order_id);
-        exit;
     } else {
-        // Error
         $_SESSION['error_message'] = "Failed to update order status.";
-        $stmt->close();
-        $conn->close();
-        header("Location: s_orderdetails.php?id=" . $order_id);
-        exit;
     }
+    
+    $stmt->close();
+    $conn->close();
+    header("Location: s_orderdetails.php?id=" . $order_id);
+    exit;
+    
 } else {
-    // If accessed directly
     $conn->close();
     header("Location: order_management.php");
     exit;

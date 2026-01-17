@@ -1,19 +1,25 @@
 <?php
+session_start();
+
+if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
+    header("Location: ../login.php");
+    exit;
+}
 // Include database connection
 include '../config/db_connect.php';
 
 // Fetch menu items from database
 $query = "
     SELECT 
-        `MENU_ID`, 
-        `MENU_NAME`, 
-        `MENU_IMAGE`, 
-        `MENU_CATEGORY`, 
-        `MENU_DESC`, 
-        `MENU_PRICE`, 
-        `MENU_AVAILABILITY`
-    FROM `MENU`
-    WHERE `IS_DELETED` = 0
+        `menuID`, 
+        `menuName`, 
+        `menuImage`, 
+        `menuCategory`, 
+        `menuDescription`, 
+        `menuPrice`, 
+        `menuAvailability`
+    FROM `menus`
+    WHERE `is_deleted` = 0
     ORDER BY `created_at` DESC
 ";
 
@@ -81,21 +87,21 @@ if (!$result) {
             <div class="staff-menu-card">
                 <div class="staff-menu-img">
                     <img src="<?php 
-                        echo !empty($menu_item['MENU_IMAGE']) 
-                            ? '../img/' . htmlspecialchars($menu_item['MENU_IMAGE']) 
+                        echo !empty($menu_item['menuImage']) 
+                            ? '../img/' . htmlspecialchars($menu_item['menuImage']) 
                             : '../img/placeholder.jpg'; 
-                    ?>" alt="<?php echo htmlspecialchars($menu_item['MENU_NAME']); ?>">
+                    ?>" alt="<?php echo htmlspecialchars($menu_item['menuName']); ?>">
                 </div>
                 <div class="staff-menu-details">
                     <span class="staff-menu-category">
-                        <?php echo htmlspecialchars($menu_item['MENU_CATEGORY'] ?? 'Uncategorized'); ?>
+                        <?php echo htmlspecialchars($menu_item['menuCategory'] ?? 'Uncategorized'); ?>
                     </span>
-                    <h3><?php echo htmlspecialchars($menu_item['MENU_NAME']); ?></h3>
-                    <p><?php echo htmlspecialchars($menu_item['MENU_DESC'] ?? 'No description'); ?></p>
+                    <h3><?php echo htmlspecialchars($menu_item['menuName']); ?></h3>
+                    <p><?php echo htmlspecialchars($menu_item['menuDescription'] ?? 'No description'); ?></p>
                     <div class="staff-menu-footer">
-                        <span class="staff-menu-price">RM <?php echo number_format($menu_item['MENU_PRICE'], 2); ?></span>
+                        <span class="staff-menu-price">RM <?php echo number_format($menu_item['menuPrice'], 2); ?></span>
                         <div class="staff-menu-actions">
-                            <a href="updatemenu.php?id=<?php echo $menu_item['MENU_ID']; ?>" class="staff-menu-edit">
+                            <a href="updatemenu.php?id=<?php echo $menu_item['menuID']; ?>" class="staff-menu-edit">
                                 <span class="material-symbols-outlined">edit</span>
                             </a>
                         </div>

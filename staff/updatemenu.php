@@ -1,5 +1,10 @@
 <?php
 session_start();
+
+if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
+    header("Location: ../login.php");
+    exit;
+}
 // Include database connection
 include '../config/db_connect.php';
 
@@ -12,9 +17,8 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $menu_id = mysqli_real_escape_string($conn, $_GET['id']);
 
-// NEW CODE GOES HERE ↓↓↓
 // Fetch existing menu item details
-$query = "SELECT * FROM `MENU` WHERE `MENU_ID` = '$menu_id' AND `IS_DELETED` = 0";
+$query = "SELECT * FROM `menus` WHERE `menuID` = '$menu_id' AND `is_deleted` = 0";
 $result = mysqli_query($conn, $query);
 if (!$result || mysqli_num_rows($result) == 0) {
     $_SESSION['error_message'] = "Menu item not found or has been deleted.";
@@ -22,7 +26,6 @@ if (!$result || mysqli_num_rows($result) == 0) {
     exit();
 }
 
-// Rest of your existing code continues here...
 $menu_item = mysqli_fetch_assoc($result);
 
 // Handle Update Form Submission
@@ -33,13 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $name = mysqli_real_escape_string($conn, $_POST['name']);
         $description = mysqli_real_escape_string($conn, $_POST['description']);
         $price = mysqli_real_escape_string($conn, $_POST['price']);
-        $menu_category = mysqli_real_escape_string($conn, $_POST['menu_category']);
-        $food_type = mysqli_real_escape_string($conn, $_POST['food_type']);
-        $meal_type = mysqli_real_escape_string($conn, $_POST['meal_type']);
+        $menu_category = mysqli_real_escape_string($conn, $_POST['menuCategory']);
+        $food_type = mysqli_real_escape_string($conn, $_POST['foodType']);
+        $meal_type = mysqli_real_escape_string($conn, $_POST['mealType']);
         $cuisine = mysqli_real_escape_string($conn, $_POST['cuisine']);
         $flavour = mysqli_real_escape_string($conn, $_POST['flavour']);
         $portion = mysqli_real_escape_string($conn, $_POST['portion']);
-        $availability = mysqli_real_escape_string($conn, $_POST['availability']);
+        $availability = mysqli_real_escape_string($conn, $_POST['menuAvailability']);
 
         // Handle file upload
         $image_name = '';
@@ -60,43 +63,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         } else {
             // Keep existing image if no new image uploaded
-            $image_query = "SELECT MENU_IMAGE FROM `MENU` WHERE MENU_ID = '$menu_id'";
+            $image_query = "SELECT menuImage FROM `menus` WHERE menuID = '$menu_id'";
             $image_result = mysqli_query($conn, $image_query);
             $image_row = mysqli_fetch_assoc($image_result);
-            $image_name = $image_row['MENU_IMAGE'];
+            $image_name = $image_row['menuImage'];
         }
 
         // Prepare SQL update statement
-        $query = "UPDATE `MENU` SET 
-            `MENU_NAME` = ?, 
-            `MENU_DESC` = ?, 
-            `MENU_PRICE` = ?, 
-            `MENU_IMAGE` = ?, 
-            `MENU_CATEGORY` = ?,
-            `FOOD_TYPE` = ?,
-            `MEAL_TYPE` = ?,
-            `CUISINE` = ?,
-            `FLAVOUR` = ?,
-            `PORTION` = ?,
-            `MENU_AVAILABILITY` = ?
-        WHERE `MENU_ID` = ?";
+        $query = "UPDATE `menus` SET 
+            `menuName` = ?, 
+            `menuDescription` = ?, 
+            `menuPrice` = ?, 
+            `menuImage` = ?, 
+            `menuCategory` = ?,
+            `foodType` = ?,
+            `mealType` = ?,
+            `cuisine` = ?,
+            `flavour` = ?,
+            `portion` = ?,
+            `menuAvailability` = ?
+        WHERE `menuID` = ?";
 
         $stmt = $conn->prepare($query);
         $availability_int = ($availability == 'Available') ? 1 : 0;
         $stmt->bind_param("ssdsssssssii", 
-        $name, 
-        $description, 
-        $price, 
-        $image_name, 
-        $menu_category,
-        $food_type,
-        $meal_type,
-        $cuisine,
-        $flavour,
-        $portion,
-        $availability_int,
-        $menu_id 
-    );
+            $name, 
+            $description, 
+            $price, 
+            $image_name, 
+            $menu_category,
+            $food_type,
+            $meal_type,
+            $cuisine,
+            $flavour,
+            $portion,
+            $availability_int,
+            $menu_id 
+        );
 
         // Execute the statement
         if ($stmt->execute()) {
@@ -112,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Handle Soft Delete
     elseif (isset($_POST['delete_menu'])) {
         // Soft delete query
-        $delete_query = "UPDATE `MENU` SET `IS_DELETED` = 1 WHERE `MENU_ID` = ?";
+        $delete_query = "UPDATE `menus` SET `is_deleted` = 1 WHERE `menuID` = ?";
         $stmt = $conn->prepare($delete_query);
         $stmt->bind_param("i", $menu_id);
 
@@ -129,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Fetch existing menu item details
-$query = "SELECT * FROM `MENU` WHERE `MENU_ID` = '$menu_id'";
+$query = "SELECT * FROM `menus` WHERE `menuID` = '$menu_id'";
 $result = mysqli_query($conn, $query);
 
 if (!$result || mysqli_num_rows($result) == 0) {
@@ -140,6 +143,7 @@ if (!$result || mysqli_num_rows($result) == 0) {
 
 $menu_item = mysqli_fetch_assoc($result);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -192,11 +196,11 @@ $menu_item = mysqli_fetch_assoc($result);
                     <div class="menu-item-image">
                         <img id="menuItemImage" 
                              src="<?php 
-                                echo !empty($menu_item['MENU_IMAGE']) 
-                                    ? '../img/' . htmlspecialchars($menu_item['MENU_IMAGE']) 
+                                echo !empty($menu_item['menuImage']) 
+                                    ? '../img/' . htmlspecialchars($menu_item['menuImage']) 
                                     : '../img/placeholder.jpg'; 
                              ?>" 
-                             alt="<?php echo htmlspecialchars($menu_item['MENU_NAME']); ?>" 
+                             alt="<?php echo htmlspecialchars($menu_item['menuName']); ?>" 
                              class="menu-item-img">
                     </div>
                     <label class="file-upload-label">
@@ -208,28 +212,28 @@ $menu_item = mysqli_fetch_assoc($result);
                 <div class="form-inputs">
                     <div class="input-group">
                         <label for="name">Food Name</label>
-                        <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($menu_item['MENU_NAME']); ?>" required>
+                        <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($menu_item['menuName']); ?>" required>
                     </div>
 
                     <div class="input-group">
                         <label for="description">Description</label>
-                        <textarea id="description" name="description" required><?php echo htmlspecialchars($menu_item['MENU_DESC']); ?></textarea>
+                        <textarea id="description" name="description" required><?php echo htmlspecialchars($menu_item['menuDescription']); ?></textarea>
                     </div>
 
                     <div class="input-row">
                         <div class="input-group">
                             <label for="price">Price (RM)</label>
-                            <input type="number" step="0.01" id="price" name="price" value="<?php echo number_format($menu_item['MENU_PRICE'], 2); ?>" required>
+                            <input type="number" step="0.01" id="price" name="price" value="<?php echo number_format($menu_item['menuPrice'], 2); ?>" required>
                         </div>
 
                         <div class="input-group">
                             <label for="menu_category">Menu Category</label>
-                            <select id="menu_category" name="menu_category" required>
-                                <option value="rice" <?php echo ($menu_item['MENU_CATEGORY'] == 'rice') ? 'selected' : ''; ?>>Rice</option>
-                                <option value="noodles" <?php echo ($menu_item['MENU_CATEGORY'] == 'noodles') ? 'selected' : ''; ?>>Noodles</option>
-                                <option value="soup" <?php echo ($menu_item['MENU_CATEGORY'] == 'soup') ? 'selected' : ''; ?>>Soup</option>
-                                <option value="dessert" <?php echo ($menu_item['MENU_CATEGORY'] == 'dessert') ? 'selected' : ''; ?>>Dessert</option>
-                                <option value="drinks" <?php echo ($menu_item['MENU_CATEGORY'] == 'drinks') ? 'selected' : ''; ?>>Drinks</option>
+                            <select id="menu_category" name="menuCategory" required>
+                                <option value="rice" <?php echo ($menu_item['menuCategory'] == 'rice') ? 'selected' : ''; ?>>Rice</option>
+                                <option value="noodles" <?php echo ($menu_item['menuCategory'] == 'noodles') ? 'selected' : ''; ?>>Noodles</option>
+                                <option value="soup" <?php echo ($menu_item['menuCategory'] == 'soup') ? 'selected' : ''; ?>>Soup</option>
+                                <option value="dessert" <?php echo ($menu_item['menuCategory'] == 'dessert') ? 'selected' : ''; ?>>Dessert</option>
+                                <option value="drinks" <?php echo ($menu_item['menuCategory'] == 'drinks') ? 'selected' : ''; ?>>Drinks</option>
                             </select>
                         </div>
                     </div>
@@ -237,21 +241,21 @@ $menu_item = mysqli_fetch_assoc($result);
                     <div class="input-row">
                         <div class="input-group">
                             <label for="food_type">Food Type</label>
-                            <select id="food_type" name="food_type" required>
-                                <option value="rice" <?php echo ($menu_item['FOOD_TYPE'] == 'rice') ? 'selected' : ''; ?>>Rice</option>
-                                <option value="noodles" <?php echo ($menu_item['FOOD_TYPE'] == 'noodles') ? 'selected' : ''; ?>>Noodles</option>
-                                <option value="soup" <?php echo ($menu_item['FOOD_TYPE'] == 'soup') ? 'selected' : ''; ?>>Soup</option>
-                                <option value="dessert" <?php echo ($menu_item['FOOD_TYPE'] == 'dessert') ? 'selected' : ''; ?>>Dessert</option>
-                                <option value="drinks" <?php echo ($menu_item['FOOD_TYPE'] == 'drinks') ? 'selected' : ''; ?>>Drinks</option>
+                            <select id="food_type" name="foodType" required>
+                                <option value="rice" <?php echo ($menu_item['foodType'] == 'rice') ? 'selected' : ''; ?>>Rice</option>
+                                <option value="noodles" <?php echo ($menu_item['foodType'] == 'noodles') ? 'selected' : ''; ?>>Noodles</option>
+                                <option value="soup" <?php echo ($menu_item['foodType'] == 'soup') ? 'selected' : ''; ?>>Soup</option>
+                                <option value="dessert" <?php echo ($menu_item['foodType'] == 'dessert') ? 'selected' : ''; ?>>Dessert</option>
+                                <option value="drinks" <?php echo ($menu_item['foodType'] == 'drinks') ? 'selected' : ''; ?>>Drinks</option>
                             </select>
                         </div>
 
                         <div class="input-group">
                             <label for="meal_type">Meal Type</label>
-                            <select id="meal_type" name="meal_type" required>
-                                <option value="breakfast" <?php echo ($menu_item['MEAL_TYPE'] == 'breakfast') ? 'selected' : ''; ?>>Breakfast</option>
-                                <option value="lunch" <?php echo ($menu_item['MEAL_TYPE'] == 'lunch') ? 'selected' : ''; ?>>Lunch</option>
-                                <option value="dinner" <?php echo ($menu_item['MEAL_TYPE'] == 'dinner') ? 'selected' : ''; ?>>Dinner</option>
+                            <select id="meal_type" name="mealType" required>
+                                <option value="breakfast" <?php echo ($menu_item['mealType'] == 'breakfast') ? 'selected' : ''; ?>>Breakfast</option>
+                                <option value="lunch" <?php echo ($menu_item['mealType'] == 'lunch') ? 'selected' : ''; ?>>Lunch</option>
+                                <option value="dinner" <?php echo ($menu_item['mealType'] == 'dinner') ? 'selected' : ''; ?>>Dinner</option>
                             </select>
                         </div>
                     </div>
@@ -260,19 +264,19 @@ $menu_item = mysqli_fetch_assoc($result);
                         <div class="input-group">
                             <label for="cuisine">Cuisine</label>
                             <select id="cuisine" name="cuisine" required>
-                                <option value="malay" <?php echo ($menu_item['CUISINE'] == 'malay') ? 'selected' : ''; ?>>Malay</option>
-                                <option value="chinese" <?php echo ($menu_item['CUISINE'] == 'chinese') ? 'selected' : ''; ?>>Chinese</option>
-                                <option value="indian" <?php echo ($menu_item['CUISINE'] == 'indian') ? 'selected' : ''; ?>>Indian</option>
-                                <option value="western" <?php echo ($menu_item['CUISINE'] == 'western') ? 'selected' : ''; ?>>Western</option>
+                                <option value="malay" <?php echo ($menu_item['cuisine'] == 'malay') ? 'selected' : ''; ?>>Malay</option>
+                                <option value="chinese" <?php echo ($menu_item['cuisine'] == 'chinese') ? 'selected' : ''; ?>>Chinese</option>
+                                <option value="indian" <?php echo ($menu_item['cuisine'] == 'indian') ? 'selected' : ''; ?>>Indian</option>
+                                <option value="western" <?php echo ($menu_item['cuisine'] == 'western') ? 'selected' : ''; ?>>Western</option>
                             </select>
                         </div>
 
                         <div class="input-group">
                             <label for="flavour">Flavour</label>
                             <select id="flavour" name="flavour" required>
-                                <option value="spicy" <?php echo ($menu_item['FLAVOUR'] == 'spicy') ? 'selected' : ''; ?>>Spicy</option>
-                                <option value="sweet" <?php echo ($menu_item['FLAVOUR'] == 'sweet') ? 'selected' : ''; ?>>Sweet</option>
-                                <option value="savoury" <?php echo ($menu_item['FLAVOUR'] == 'savoury') ? 'selected' : ''; ?>>Savoury</option>
+                                <option value="spicy" <?php echo ($menu_item['flavour'] == 'spicy') ? 'selected' : ''; ?>>Spicy</option>
+                                <option value="sweet" <?php echo ($menu_item['flavour'] == 'sweet') ? 'selected' : ''; ?>>Sweet</option>
+                                <option value="savoury" <?php echo ($menu_item['flavour'] == 'savoury') ? 'selected' : ''; ?>>Savoury</option>
                             </select>
                         </div>
                     </div>
@@ -281,24 +285,24 @@ $menu_item = mysqli_fetch_assoc($result);
                         <div class="input-group">
                             <label for="portion">Portion</label>
                             <select id="portion" name="portion" required>
-                                <option value="light" <?php echo ($menu_item['PORTION'] == 'light') ? 'selected' : ''; ?>>Light</option>
-                                <option value="medium" <?php echo ($menu_item['PORTION'] == 'medium') ? 'selected' : ''; ?>>Medium</option>
-                                <option value="large" <?php echo ($menu_item['PORTION'] == 'large') ? 'selected' : ''; ?>>Large</option>
+                                <option value="light" <?php echo ($menu_item['portion'] == 'light') ? 'selected' : ''; ?>>Light</option>
+                                <option value="medium" <?php echo ($menu_item['portion'] == 'medium') ? 'selected' : ''; ?>>Medium</option>
+                                <option value="large" <?php echo ($menu_item['portion'] == 'large') ? 'selected' : ''; ?>>Large</option>
                             </select>
                         </div>
 
                         <div class="input-group">
                             <label for="availability">Availability Status</label>
-                            <select id="availability" name="availability" required>
-                                <option value="Available" <?php echo ($menu_item['MENU_AVAILABILITY'] == 1) ? 'selected' : ''; ?>>Available</option>
-                                <option value="Out of Stock" <?php echo ($menu_item['MENU_AVAILABILITY'] == 0) ? 'selected' : ''; ?>>Out of Stock</option>
+                            <select id="availability" name="menuAvailability" required>
+                                <option value="Available" <?php echo ($menu_item['menuAvailability'] == 1) ? 'selected' : ''; ?>>Available</option>
+                                <option value="Out of Stock" <?php echo ($menu_item['menuAvailability'] == 0) ? 'selected' : ''; ?>>Out of Stock</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-actions">
                         <button type="submit" name="update_menu" class="update-confirm-btn">Save Changes</button>
-                            <button type="button" onclick="confirmDelete(<?php echo $menu_item['MENU_ID']; ?>)" class="delete-menu-btn">Delete Menu</button>
+                            <button type="button" onclick="confirmDelete(<?php echo $menu_item['menuID']; ?>)" class="delete-menu-btn">Delete Menu</button>
                             <script>
                             function confirmDelete(menuId) {
                                 if (confirm('Are you sure you want to soft delete this menu item?')) {

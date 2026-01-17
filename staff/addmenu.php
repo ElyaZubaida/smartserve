@@ -1,5 +1,12 @@
 <?php
 session_start();
+
+// Check if staff is logged in
+if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
+    header("Location: ../login.php");
+    exit;
+}
+
 // Include database connection
 include '../config/db_connect.php';
 
@@ -9,13 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $description = mysqli_real_escape_string($conn, $_POST['description']);
     $price = mysqli_real_escape_string($conn, $_POST['price']);
-    $menu_category = mysqli_real_escape_string($conn, $_POST['menu_category']);
-    $food_type = mysqli_real_escape_string($conn, $_POST['food_type']);
-    $meal_type = mysqli_real_escape_string($conn, $_POST['meal_type']);
+    $menu_category = mysqli_real_escape_string($conn, $_POST['menuCategory']);
+    $food_type = mysqli_real_escape_string($conn, $_POST['foodType']);
+    $meal_type = mysqli_real_escape_string($conn, $_POST['mealType']);
     $cuisine = mysqli_real_escape_string($conn, $_POST['cuisine']);
     $flavour = mysqli_real_escape_string($conn, $_POST['flavour']);
     $portion = mysqli_real_escape_string($conn, $_POST['portion']);
-    $availability = mysqli_real_escape_string($conn, $_POST['availability']);
+    $availability = mysqli_real_escape_string($conn, $_POST['menuAvailability']);
 
     // Handle file upload
     $image_name = '';
@@ -36,27 +43,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
         }
     }
 
-    // Prepare SQL insert statement with updated attributes
-    $query = "INSERT INTO `MENU` (
-        `MENU_NAME`, 
-        `MENU_DESC`, 
-        `MENU_PRICE`, 
-        `MENU_IMAGE`, 
-        `MENU_CATEGORY`,
-        `FOOD_TYPE`,
-        `MEAL_TYPE`,
-        `CUISINE`,
-        `FLAVOUR`,
-        `PORTION`,
-        `MENU_AVAILABILITY`
-    ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-    )";
+    // Staff is adding the menu - get staff_id from session, admin_id is NULL
+    $staff_id = $_SESSION['staff_id'];
+    $admin_id = NULL;
+
+    // Prepare SQL insert statement
+    $query = "INSERT INTO `menus` (
+        `menuName`, 
+        `menuDescription`, 
+        `menuPrice`, 
+        `menuImage`, 
+        `menuCategory`,
+        `foodType`,
+        `mealType`,
+        `cuisine`,
+        `flavour`,
+        `portion`,
+        `menuAvailability`,
+        `staff_id`,
+        `admin_id`
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($query);
     $availability_int = ($availability == 'Available') ? 1 : 0;
-    // Update the bind_param line
-    $stmt->bind_param("ssdsssssssi", 
+    $stmt->bind_param("ssdsssssssiii", 
         $name, 
         $description, 
         $price, 
@@ -67,7 +77,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
         $cuisine,
         $flavour,
         $portion,
-        $availability_int
+        $availability_int,
+        $staff_id,
+        $admin_id
     );
 
     // Execute the statement
@@ -160,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
 
                         <div class="input-group">
                             <label for="menu_category">Menu Category</label>
-                            <select id="menu_category" name="menu_category" required>
+                            <select id="menu_category" name="menuCategory" required>
                                 <option value="">Select Category</option>
                                 <option value="rice">Rice</option>
                                 <option value="noodles">Noodles</option>
@@ -174,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
                     <div class="input-row">
                         <div class="input-group">
                             <label for="food_type">Food Type</label>
-                            <select id="food_type" name="food_type" required>
+                            <select id="food_type" name="foodType" required>
                                 <option value="">Select Food Type</option>
                                 <option value="rice">Rice</option>
                                 <option value="noodles">Noodles</option>
@@ -186,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
 
                         <div class="input-group">
                             <label for="meal_type">Meal Type</label>
-                            <select id="meal_type" name="meal_type" required>
+                            <select id="meal_type" name="mealType" required>
                                 <option value="">Select Meal Type</option>
                                 <option value="breakfast">Breakfast</option>
                                 <option value="lunch">Lunch</option>
@@ -231,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
 
                         <div class="input-group">
                             <label for="availability">Initial Availability</label>
-                            <select id="availability" name="availability" required>
+                            <select id="availability" name="menuAvailability" required>
                                 <option value="Available" selected>Available</option>
                                 <option value="Out of Stock">Out of Stock</option>
                             </select>
@@ -264,6 +276,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
 </html>
 
 <?php
-// Close database connection
 mysqli_close($conn);
 ?>

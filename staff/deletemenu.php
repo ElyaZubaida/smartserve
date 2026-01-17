@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
+    header("Location: ../login.php");
+    exit;
+}
 // Include database connection
 include '../config/db_connect.php';
 
@@ -13,7 +17,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 $menu_id = mysqli_real_escape_string($conn, $_GET['id']);
 
 // Soft delete query
-$delete_query = "UPDATE `MENU` SET `IS_DELETED` = 1 WHERE `MENU_ID` = ?";
+$delete_query = "UPDATE `menus` SET `is_deleted` = 1 WHERE `menuID` = ?";
 $stmt = $conn->prepare($delete_query);
 $stmt->bind_param("i", $menu_id);
 
