@@ -1,6 +1,6 @@
 <!-- 
  Frontend: Elya 
- Backend: Qis 
+ Backend: Aleesya, Amirah 
  -->
 <?php
     session_start();
@@ -43,9 +43,10 @@
                 } else {
                     $error_message = 'Invalid username or password';
                 }
-            } else {
-                // Query for staff login
-                $query = "SELECT staffID, staffName, staffEmail, staffPassword FROM staff WHERE staffEmail = ? OR staffName = ?";
+            } 
+            else {
+                // Query for staff login - check email OR username
+                $query = "SELECT staffID, staffName, staffEmail, staffPassword FROM staff WHERE staffEmail = ? OR staffUsername = ?";
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param("ss", $username, $username);
                 $stmt->execute();
@@ -54,8 +55,8 @@
                 if ($result->num_rows > 0) {
                     $user = $result->fetch_assoc();
                     
-                    // Verify password
-                    if (password_verify($password, $user['staffPassword'])) {
+                    // Verify password using MD5
+                    if (md5($password) === $user['staffPassword']) {
                         // Set session variables
                         $_SESSION['staff_id'] = $user['staffID'];
                         $_SESSION['staff_name'] = $user['staffName'];
@@ -156,14 +157,17 @@
     const staffRadio = document.querySelector('input[value="staff"]');
     const signupSection = document.getElementById('signup-section');
     const forgotPasswordLink = document.querySelector('.forgot-password');
+    const usernameInput = document.getElementById('username');
 
     function toggleSignup() {
         if (staffRadio.checked) {
             signupSection.style.display = 'none';    // Hide Sign Up for Staff
             forgotPasswordLink.style.display = 'none'; // Hide Forgot Password for Staff
+            usernameInput.placeholder = 'Email or Username';
         } else {
             signupSection.style.display = 'block';   // Show for Students
             forgotPasswordLink.style.display = 'block'; 
+            usernameInput.placeholder = 'Username';
         }
     }
 
