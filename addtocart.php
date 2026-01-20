@@ -89,10 +89,10 @@
             $stmt->bind_param("idiiss", $new_quantity, $new_subtotal, $cart_ID, $menuID, $cm_request, $cm_request);
             $stmt->execute();
         } else {
-            $insert_query = "INSERT INTO cart_menu (cart_ID, menuID, cm_quantity, cm_subtotal, cm_request) 
+            $insert_query = "INSERT INTO cart_menu (cart_ID, menuID, cm_quantity, cm_request, cm_subtotal) 
                             VALUES (?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($insert_query);
-            $stmt->bind_param("iiids", $cart_ID, $menuID, $quantity, $subtotal, $cm_request);
+            $stmt->bind_param("iiisd", $cart_ID, $menuID, $quantity, $cm_request, $subtotal);
             $stmt->execute();
         }
 
@@ -107,9 +107,11 @@
 
         $conn->commit();
         echo json_encode(['success' => true, 'message' => 'Item added to cart successfully']);
+        exit();
 
     } catch (Exception $e) {
         $conn->rollback();
         echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        exit();
     }
 ?>

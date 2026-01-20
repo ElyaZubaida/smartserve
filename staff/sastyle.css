@@ -430,6 +430,20 @@ body {
     margin-top: 15px;
     transition: 0.3s;
 }
+.tooltip-icon {
+    display: inline-block;
+    margin-left: 5px;
+    color: #007bff; /* Blue color like a standard info icon */
+    cursor: help;
+    font-weight: bold;
+    font-size: 10px !important;
+    vertical-align: middle;
+}
+
+/* Optional: Add a simple browser tooltip style */
+.tooltip-icon:hover {
+    color: #0056b3;
+}
 
 .delete-menu-btn:hover { background-color: #d32f2f; color: white; }
 

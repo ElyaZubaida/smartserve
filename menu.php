@@ -81,11 +81,11 @@
 
         <div class="category-wrapper">
             <section class="category-buttons">
-                <button class="active" onclick="scrollToCategory('recommended')"><span class="material-symbols-outlined">star_shine</span> For You</button>
-                <button onclick="scrollToCategory('breakfast')"><span class="material-symbols-outlined">egg_alt</span> Breakfast</button>
                 <button onclick="scrollToCategory('rice')"><span class="material-symbols-outlined">rice_bowl</span> Rice</button>
                 <button onclick="scrollToCategory('noodles')"><span class="material-symbols-outlined">ramen_dining</span> Noodles</button>
                 <button onclick="scrollToCategory('soup')"><span class="material-symbols-outlined">soup_kitchen</span> Soup</button>
+                <button onclick="scrollToCategory('wrapnbuns')"><span class="material-symbols-outlined">bakery_dining</span> Wrap & Buns</button>
+                <button onclick="scrollToCategory('snacks')"><span class="material-symbols-outlined">fastfood</span> Snacks</button>
                 <button onclick="scrollToCategory('dessert')"><span class="material-symbols-outlined">icecream</span> Desserts</button>
                 <button onclick="scrollToCategory('drinks')"><span class="material-symbols-outlined">water_full</span> Drinks</button>
             </section>
@@ -132,137 +132,52 @@
                 </div>
             </section>
 
-            <!-- Breakfast Section -->
-            <?php if (isset($menu_by_category['breakfast'])): ?>
-            <section class="menu-category" id="breakfast">
-                <div class="category-header">
-                    <h2><span class="material-symbols-outlined">egg_alt</span> Breakfast</h2>
-                </div>
-                <div class="menu-grid">
-                    <?php foreach ($menu_by_category['breakfast'] as $item): ?>
-                        <div class="menu-item">
-                            <a href="menudetails.php?id=<?php echo $item['menuID']; ?>" class="item-link">
-                                <img src="<?php echo htmlspecialchars($item['menuImage']); ?>" alt="<?php echo htmlspecialchars($item['menuName']); ?>">
-                                <div class="item-info">
-                                    <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
-                                    <span class="price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
-                                </div>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-            <?php endif; ?>
+            <?php
+            $categories = ['rice', 'noodles', 'soup', 'wrapnbuns', 'snacks', 'dessert', 'drinks'];
 
-            <!-- Rice Section -->
-            <?php if (isset($menu_by_category['rice'])): ?>
-            <section class="menu-category" id="rice">
-                <div class="category-header">
-                    <h2><span class="material-symbols-outlined">rice_bowl</span> Rice Dishes</h2>
-                </div>
-                <div class="menu-grid">
-                    <?php foreach ($menu_by_category['rice'] as $item): ?>
-                        <div class="menu-item">
-                            <a href="menudetails.php?id=<?php echo $item['menuID']; ?>" class="item-link">
-                                <img src="<?php echo htmlspecialchars($item['menuImage']); ?>" alt="<?php echo htmlspecialchars($item['menuName']); ?>">
-                                <div class="item-info">
-                                    <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
-                                    <span class="price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
-                                </div>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-            <?php endif; ?>
-
-            <!-- Noodles Section -->
-            <?php if (isset($menu_by_category['noodles'])): ?>
-            <section class="menu-category" id="noodles">
-                <div class="category-header">
-                    <h2><span class="material-symbols-outlined">ramen_dining</span> Noodles</h2>
-                </div>
-                <div class="menu-grid">
-                    <?php foreach ($menu_by_category['noodles'] as $item): ?>
-                        <div class="menu-item">
-                            <a href="menudetails.php?id=<?php echo $item['menuID']; ?>" class="item-link">
-                                <img src="<?php echo htmlspecialchars($item['menuImage']); ?>" alt="<?php echo htmlspecialchars($item['menuName']); ?>">
-                                <div class="item-info">
-                                    <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
-                                    <span class="price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
-                                </div>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-            <?php endif; ?>
-
-            <!-- Soup Section -->
-            <?php if (isset($menu_by_category['soup'])): ?>
-            <section class="menu-category" id="soup">
-                <div class="category-header">
-                    <h2><span class="material-symbols-outlined">soup_kitchen</span> Soup</h2>
-                </div>
-                <div class="menu-grid">
-                    <?php foreach ($menu_by_category['soup'] as $item): ?>
-                        <div class="menu-item">
-                            <a href="menudetails.php?id=<?php echo $item['menuID']; ?>" class="item-link">
-                                <img src="<?php echo htmlspecialchars($item['menuImage']); ?>" alt="<?php echo htmlspecialchars($item['menuName']); ?>">
-                                <div class="item-info">
-                                    <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
-                                    <span class="price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
-                                </div>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-            <?php endif; ?>
-
-            <!-- Desserts Section -->
-            <?php if (isset($menu_by_category['dessert'])): ?>
-            <section class="menu-category" id="dessert">
-                <div class="category-header">
-                    <h2><span class="material-symbols-outlined">icecream</span> Desserts</h2>
-                </div>
-                <div class="menu-grid">
-                    <?php foreach ($menu_by_category['dessert'] as $item): ?>
-                        <div class="menu-item">
-                            <a href="menudetails.php?id=<?php echo $item['menuID']; ?>" class="item-link">
-                                <img src="<?php echo htmlspecialchars($item['menuImage']); ?>" alt="<?php echo htmlspecialchars($item['menuName']); ?>">
-                                <div class="item-info">
-                                    <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
-                                    <span class="price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
-                                </div>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-            <?php endif; ?>
-
-            <!-- Drinks Section -->
-            <?php if (isset($menu_by_category['drinks'])): ?>
-            <section class="menu-category" id="drinks">
-                <div class="category-header">
-                    <h2><span class="material-symbols-outlined">water_full</span> Drinks</h2>
-                </div>
-                <div class="menu-grid">
-                    <?php foreach ($menu_by_category['drinks'] as $item): ?>
-                        <div class="menu-item">
-                            <a href="menudetails.php?id=<?php echo $item['menuID']; ?>" class="item-link">
-                                <img src="<?php echo htmlspecialchars($item['menuImage']); ?>" alt="<?php echo htmlspecialchars($item['menuName']); ?>">
-                                <div class="item-info">
-                                    <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
-                                    <span class="price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
-                                </div>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </section>
-            <?php endif; ?>
+            foreach($categories as $cat): 
+                // Only display the section if the category actually has items in the database
+                if (isset($menu_by_category[$cat]) && !empty($menu_by_category[$cat])): 
+            ?>
+                <section class="menu-category" id="<?php echo $cat; ?>">
+                    <div class="category-header">
+                        <h2>
+                            <span class="material-symbols-outlined">
+                                <?php
+                                    // Dynamic Icons based on category
+                                    if($cat == 'rice') echo 'rice_bowl';
+                                    elseif($cat == 'noodles') echo 'ramen_dining';
+                                    elseif($cat == 'soup') echo 'soup_kitchen';
+                                    elseif($cat == 'wrapnbuns') echo 'bakery_dining';
+                                    elseif($cat == 'snacks') echo 'fastfood';
+                                    elseif($cat == 'dessert') echo 'icecream';
+                                    elseif($cat == 'drinks') echo 'water_full';
+                                ?>
+                            </span>
+                            <?php echo ($cat == 'wrapnbuns') ? "Wrap & Buns" : ucfirst($cat); ?>
+                        </h2>
+                    </div>
+                    
+                    <div class="menu-grid">
+                        <?php foreach ($menu_by_category[$cat] as $item): ?>
+                            <div class="menu-item">
+                                <a href="menudetails.php?id=<?php echo $item['menuID']; ?>" class="item-link">
+                                    <img src="img/<?php echo htmlspecialchars($item['menuImage']); ?>" 
+                                        onerror="this.src='img/default_food.png'" 
+                                        alt="<?php echo htmlspecialchars($item['menuName']); ?>">
+                                    <div class="item-info">
+                                        <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
+                                        <span class="price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
+                                    </div>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </section>
+            <?php 
+                endif; 
+            endforeach; 
+            ?>
         </main>
 
         <script>

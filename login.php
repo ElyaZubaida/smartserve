@@ -27,7 +27,7 @@
                     $user = $result->fetch_assoc();
                     
                     // Verify password (assuming passwords are hashed with password_hash())
-                    if (password_verify($password, $user['student_password'])) {
+                    if (md5($password) === $user['student_password']) { // Change to md5 to match existing system
                         // Set session variables
                         $_SESSION['student_id'] = $user['student_ID'];
                         $_SESSION['student_name'] = $user['student_name'];

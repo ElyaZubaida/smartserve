@@ -182,6 +182,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
                                 <option value="rice">Rice</option>
                                 <option value="noodles">Noodles</option>
                                 <option value="soup">Soup</option>
+                                <option value="wrapnbuns">Wrap & Buns</option>
+                                <option value="snacks">Snacks</option>
                                 <option value="dessert">Dessert</option>
                                 <option value="drinks">Drinks</option>
                             </select>
@@ -190,14 +192,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
 
                     <div class="input-row">
                         <div class="input-group">
-                            <label for="food_type">Food Type</label>
+                            <label for="food_type">Food Type <span class="tooltip-icon" title="Classify this meal based on a student's daily needs: Is it for staying healthy, fueling a long study session, a quick bite between classes, or a refreshing break?"><span class="material-symbols-outlined">info</span></span></label>
                             <select id="food_type" name="foodType" required>
                                 <option value="">Select Food Type</option>
-                                <option value="rice">Rice</option>
-                                <option value="noodles">Noodles</option>
-                                <option value="soup">Soup</option>
-                                <option value="dessert">Dessert</option>
-                                <option value="drinks">Drinks</option>
+                                <option value="healthy">Healthy</option>
+                                <option value="energy-boosting">Energy Boosting</option>
+                                <option value="refreshing">Refreshing</option>
+                                <option value="fastneasy">Fast & Easy</option>
                             </select>
                         </div>
 
@@ -208,6 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
                                 <option value="breakfast">Breakfast</option>
                                 <option value="lunch">Lunch</option>
                                 <option value="dinner">Dinner</option>
+                                <option value="anytime">Anytime</option>
                             </select>
                         </div>
                     </div>
@@ -240,9 +242,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
                             <label for="portion">Portion</label>
                             <select id="portion" name="portion" required>
                                 <option value="">Select Portion</option>
-                                <option value="light">Light</option>
-                                <option value="medium">Medium</option>
-                                <option value="large">Large</option>
+                                <option value="light">Light (Light Snack)</option>
+                                <option value="regular">Regular (Standard Meal)</option>
+                                <option value="large">Large (High Hunger)</option>
                             </select>
                         </div>
 

@@ -1839,27 +1839,27 @@ p {
     font-size: 0.9rem;
 }
 
-.status-badge.Completed { 
+.status-badge.completed { 
     background: #e8f5e9; 
     color: #2e7d32; 
 }
 
-.status-badge.Pending { 
+.status-badge.pending { 
     background: #ffebee; 
     color: #d32f2f; 
 }
 
-.status-badge.Preparing { 
+.status-badge.preparing { 
     background: #fff3e0; 
     color: #ef6c00; 
 }
 
-.status-badge.Ready { 
+.status-badge.ready { 
     background: #e3f2fd; 
     color: #0056b3; 
 }
 
-.status-badge.Cancelled { 
+.status-badge.cancelled { 
     background: #eeeeee; 
     color: #666666; 
 }

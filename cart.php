@@ -45,7 +45,7 @@
         }
         header("Location: cart.php");
         exit();
-    }
+    } 
 
     // Handle item removal
     if (isset($_POST['remove_item'])) {

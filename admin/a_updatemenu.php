@@ -234,6 +234,8 @@ $menu_item = mysqli_fetch_assoc($result);
                                 <option value="rice" <?php echo ($menu_item['menuCategory'] == 'rice') ? 'selected' : ''; ?>>Rice</option>
                                 <option value="noodles" <?php echo ($menu_item['menuCategory'] == 'noodles') ? 'selected' : ''; ?>>Noodles</option>
                                 <option value="soup" <?php echo ($menu_item['menuCategory'] == 'soup') ? 'selected' : ''; ?>>Soup</option>
+                                <option value="wrapnbuns" <?php echo ($menu_item['menuCategory'] == 'wrapnbuns') ? 'selected' : ''; ?>>Wrap & Buns</option>
+                                <option value="snacks" <?php echo ($menu_item['menuCategory'] == 'snacks') ? 'selected' : ''; ?>>Snacks</option>
                                 <option value="dessert" <?php echo ($menu_item['menuCategory'] == 'dessert') ? 'selected' : ''; ?>>Dessert</option>
                                 <option value="drinks" <?php echo ($menu_item['menuCategory'] == 'drinks') ? 'selected' : ''; ?>>Drinks</option>
                             </select>
@@ -242,13 +244,17 @@ $menu_item = mysqli_fetch_assoc($result);
 
                     <div class="input-row">
                         <div class="input-group">
-                            <label for="food_type">Food Type</label>
+                            <label for="food_type">
+                                Food Type 
+                                <span class="tooltip-icon" title="Classify this meal based on a student's daily needs: Is it for staying healthy, fueling a long study session, a quick bite between classes, or a refreshing break?">
+                                    <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">info</span>
+                                </span>
+                            </label>
                             <select id="food_type" name="foodType" required>
-                                <option value="rice" <?php echo ($menu_item['foodType'] == 'rice') ? 'selected' : ''; ?>>Rice</option>
-                                <option value="noodles" <?php echo ($menu_item['foodType'] == 'noodles') ? 'selected' : ''; ?>>Noodles</option>
-                                <option value="soup" <?php echo ($menu_item['foodType'] == 'soup') ? 'selected' : ''; ?>>Soup</option>
-                                <option value="dessert" <?php echo ($menu_item['foodType'] == 'dessert') ? 'selected' : ''; ?>>Dessert</option>
-                                <option value="drinks" <?php echo ($menu_item['foodType'] == 'drinks') ? 'selected' : ''; ?>>Drinks</option>
+                                <option value="healthy" <?php echo ($menu_item['foodType'] == 'healthy') ? 'selected' : ''; ?>>Healthy</option>
+                                <option value="energy-boosting" <?php echo ($menu_item['foodType'] == 'energy-boosting') ? 'selected' : ''; ?>>Energy Boosting</option>
+                                <option value="refreshing" <?php echo ($menu_item['foodType'] == 'refreshing') ? 'selected' : ''; ?>>Refreshing</option>
+                                <option value="fastneasy" <?php echo ($menu_item['foodType'] == 'fastneasy') ? 'selected' : ''; ?>>Fast & Easy</option>
                             </select>
                         </div>
 
@@ -258,6 +264,7 @@ $menu_item = mysqli_fetch_assoc($result);
                                 <option value="breakfast" <?php echo ($menu_item['mealType'] == 'breakfast') ? 'selected' : ''; ?>>Breakfast</option>
                                 <option value="lunch" <?php echo ($menu_item['mealType'] == 'lunch') ? 'selected' : ''; ?>>Lunch</option>
                                 <option value="dinner" <?php echo ($menu_item['mealType'] == 'dinner') ? 'selected' : ''; ?>>Dinner</option>
+                                <option value="anytime" <?php echo ($menu_item['mealType'] == 'anytime') ? 'selected' : ''; ?>>Anytime</option>
                             </select>
                         </div>
                     </div>
@@ -270,7 +277,7 @@ $menu_item = mysqli_fetch_assoc($result);
                                 <option value="chinese" <?php echo ($menu_item['cuisine'] == 'chinese') ? 'selected' : ''; ?>>Chinese</option>
                                 <option value="indian" <?php echo ($menu_item['cuisine'] == 'indian') ? 'selected' : ''; ?>>Indian</option>
                                 <option value="western" <?php echo ($menu_item['cuisine'] == 'western') ? 'selected' : ''; ?>>Western</option>
-                            </select>
+                                </select>
                         </div>
 
                         <div class="input-group">
@@ -287,12 +294,12 @@ $menu_item = mysqli_fetch_assoc($result);
                         <div class="input-group">
                             <label for="portion">Portion</label>
                             <select id="portion" name="portion" required>
-                                <option value="light" <?php echo ($menu_item['portion'] == 'light') ? 'selected' : ''; ?>>Light</option>
-                                <option value="medium" <?php echo ($menu_item['portion'] == 'medium') ? 'selected' : ''; ?>>Medium</option>
-                                <option value="large" <?php echo ($menu_item['portion'] == 'large') ? 'selected' : ''; ?>>Large</option>
+                                <option value="light" <?php echo ($menu_item['portion'] == 'light') ? 'selected' : ''; ?>>Light (Snack)</option>
+                                <option value="regular" <?php echo ($menu_item['portion'] == 'regular') ? 'selected' : ''; ?>>Regular (Meal)</option>
+                                <option value="large" <?php echo ($menu_item['portion'] == 'large') ? 'selected' : ''; ?>>Large (High Hunger)</option>
                             </select>
                         </div>
-
+                        
                         <div class="input-group">
                             <label for="availability">Availability Status</label>
                             <select id="availability" name="menuAvailability" required>
