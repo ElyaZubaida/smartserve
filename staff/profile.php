@@ -1,11 +1,10 @@
-<!-- 
- Frontend: Mina 
- Backend: Amirah, Qis
- -->
 <?php
+// Frontend: Mina 
+// Backend: Amirah, Qis
+
 session_start();
 
-// Check if staff is logged in
+// 1. Check Login
 if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
     header("Location: ../login.php");
     exit;
@@ -17,8 +16,10 @@ $staff_id = $_SESSION['staff_id'];
 $success_message = '';
 $error_message = '';
 
-// Fetch current staff data
-$query = "SELECT staffID, staffName, staffEmail, staffUsername FROM staff WHERE staffID = ?";
+// 2. Fetch Current Staff Data
+// FIX: We fetch 'staffPassword' here so we can check it later
+// FIX: We check 'is_deleted = 0'
+$query = "SELECT staffID, staffName, staffEmail, staffUsername, staffPassword FROM staff WHERE staffID = ? AND is_deleted = 0";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $staff_id);
 $stmt->execute();
@@ -26,7 +27,14 @@ $result = $stmt->get_result();
 $staff = $result->fetch_assoc();
 $stmt->close();
 
-// Handle form submission
+// If staff not found, logout
+if (!$staff) {
+    session_destroy();
+    header("Location: ../login.php");
+    exit;
+}
+
+// 3. Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
@@ -39,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($name) || empty($email) || empty($username)) {
         $error_message = "Name, email, and username are required.";
     } else {
-        // Check if email already exists (for other users)
+        // Check uniqueness (Email)
         $check_email = "SELECT staffID FROM staff WHERE staffEmail = ? AND staffID != ?";
         $stmt = $conn->prepare($check_email);
         $stmt->bind_param("si", $email, $staff_id);
@@ -49,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($email_result->num_rows > 0) {
             $error_message = "Email is already used by another account.";
         } else {
-            // Check if username already exists (for other users)
+            // Check uniqueness (Username)
             $check_username = "SELECT staffID FROM staff WHERE staffUsername = ? AND staffID != ?";
             $stmt = $conn->prepare($check_username);
             $stmt->bind_param("si", $username, $staff_id);
@@ -59,28 +67,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($username_result->num_rows > 0) {
                 $error_message = "Username is already taken.";
             } else {
-                // Update profile (without password)
+                
+                // --- SCENARIO A: Update Info Only (No Password Change) ---
                 if (empty($current_password) && empty($new_password)) {
-                    $update_query = "UPDATE staff SET staffName = ?, staffEmail = ?, staffUsername = ? WHERE staffID = ?";
+                    
+                    // FIX: Added 'updated_at = NOW()'
+                    $update_query = "UPDATE staff SET staffName = ?, staffEmail = ?, staffUsername = ?, updated_at = NOW() WHERE staffID = ?";
                     $stmt = $conn->prepare($update_query);
                     $stmt->bind_param("sssi", $name, $email, $username, $staff_id);
                     
                     if ($stmt->execute()) {
                         $success_message = "Profile updated successfully!";
                         
-                        // Update session variables
+                        // Update Session & Local Variable
                         $_SESSION['staff_name'] = $name;
                         $_SESSION['staff_email'] = $email;
-                        
-                        // Refresh staff data
                         $staff['staffName'] = $name;
                         $staff['staffEmail'] = $email;
                         $staff['staffUsername'] = $username;
                     } else {
                         $error_message = "Failed to update profile.";
                     }
-                } else {
-                    // Update profile with password change
+                } 
+                // --- SCENARIO B: Update Info AND Password ---
+                else {
                     if (empty($current_password)) {
                         $error_message = "Please enter your current password to change it.";
                     } elseif (empty($new_password)) {
@@ -90,35 +100,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     } elseif (strlen($new_password) < 6) {
                         $error_message = "New password must be at least 6 characters.";
                     } else {
-                        // Verify current password
-                        $verify_query = "SELECT staffPassword FROM staff WHERE staffID = ?";
-                        $stmt = $conn->prepare($verify_query);
-                        $stmt->bind_param("i", $staff_id);
-                        $stmt->execute();
-                        $password_result = $stmt->get_result();
-                        $current_data = $password_result->fetch_assoc();
                         
-                        // Check if current password matches (using MD5 as per your system)
-                        if (md5($current_password) !== $current_data['staffPassword']) {
+                        // --- THE HYBRID PASSWORD CHECK (Crucial Fix) ---
+                        $db_pass = $staff['staffPassword'];
+                        
+                        // Check 1: Is it Plain Text? (e.g., 'mike123')
+                        $is_plain = ($current_password === $db_pass);
+                        // Check 2: Is it MD5? (e.g., 'e10adc3949...')
+                        $is_md5 = (md5($current_password) === $db_pass);
+                        
+                        if (!$is_plain && !$is_md5) {
                             $error_message = "Current password is incorrect.";
                         } else {
-                            // Update profile with new password
+                            // Password correct, proceed to update
                             $new_password_hash = md5($new_password);
-                            $update_query = "UPDATE staff SET staffName = ?, staffEmail = ?, staffUsername = ?, staffPassword = ? WHERE staffID = ?";
+                            
+                            // FIX: Added 'updated_at = NOW()'
+                            $update_query = "UPDATE staff SET staffName = ?, staffEmail = ?, staffUsername = ?, staffPassword = ?, updated_at = NOW() WHERE staffID = ?";
                             $stmt = $conn->prepare($update_query);
                             $stmt->bind_param("ssssi", $name, $email, $username, $new_password_hash, $staff_id);
                             
                             if ($stmt->execute()) {
                                 $success_message = "Profile and password updated successfully!";
                                 
-                                // Update session variables
                                 $_SESSION['staff_name'] = $name;
                                 $_SESSION['staff_email'] = $email;
-                                
-                                // Refresh staff data
                                 $staff['staffName'] = $name;
                                 $staff['staffEmail'] = $email;
                                 $staff['staffUsername'] = $username;
+                                $staff['staffPassword'] = $new_password_hash; // Update local variable
                             } else {
                                 $error_message = "Failed to update profile.";
                             }
@@ -142,10 +152,15 @@ mysqli_close($conn);
     <title>SmartServe - Staff Profile</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="sastyle.css">
+    
+    <style>
+        .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: 4px; display: flex; align-items: center; gap: 10px; }
+        .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+        .alert-error { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+    </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-top">
             <div class="logo-container">
@@ -167,7 +182,6 @@ mysqli_close($conn);
         </div>
     </div>
 
-    <!-- Main content area -->
     <div class="main-content profile-content">
         <div class="header">
             <div class="title">

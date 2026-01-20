@@ -2209,3 +2209,77 @@ p {
         gap: 4px;
         flex: 1;
     }
+
+        /* ================= FORGOT PASSWORD PAGE STYLES ================= */
+
+    /* Center the card on the screen */
+    /* ================= FORGOT PASSWORD PAGE STYLES ================= */
+
+/* Wrapper */
+    .forgot-password-page {
+        display: flex;
+        justify-content: center;
+        /* CHANGE HERE: from 'center' to 'flex-start' so it goes to the top */
+        align-items: flex-start; 
+        
+        /* CHANGE HERE: Control the gap (jarak) with this number */
+        padding-top: 50px; 
+        
+        min-height: 80vh; 
+    }
+
+    /* The Card Itself */
+    .forgot-password-card {
+        background-color: #fff;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px; 
+        text-align: center;
+        margin: 0 auto; 
+    }
+
+/* ... keep the rest of the CSS the same ... */
+
+    .forgot-password-card h2 {
+        margin-bottom: 20px;
+        color: #333;
+        font-weight: 600;
+    }
+
+    /* Message Boxes */
+    .msg-box {
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        font-size: 0.9em;
+        text-align: left;
+    }
+
+    .msg-box.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .msg-box.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Back Link */
+    .back-link {
+        display: block;
+        margin-top: 20px;
+        color: #666;
+        text-decoration: none;
+        font-size: 0.9em;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: #333;
+        text-decoration: underline;
+    }
