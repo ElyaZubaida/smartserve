@@ -2,26 +2,52 @@
  Frontend: Elya 
  Backend: Qis
  -->
-
 <?php
 session_start();
 
+
+// If already logged in as admin, redirect to dashboard
+if (isset($_SESSION['admin_id']) && $_SESSION['role'] === 'admin') {
+    header('Location: a_dashboard.php');
+    exit();
+}
+
+include '../config/db_connect.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    $valid_admins = [
-        'admin1' => 'adminpass123',
-    ];
-
-    if (isset($valid_admins[$username]) && $valid_admins[$username] == $password) {
-        $_SESSION['username'] = $username;
-        $_SESSION['role'] = 'admin'; 
-
-        header('Location: a_dashboard.php'); 
-        exit();
+    if (empty($username) || empty($password)) {
+        $error_message = 'Please enter both username and password';
     } else {
-        $error_message = 'Invalid Admin credentials';
+        // Query for admin login - check email OR username
+        $query = "SELECT admin_ID, admin_name, admin_email, admin_username, admin_password FROM admins WHERE admin_email = ? OR admin_username = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ss", $username, $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $admin = $result->fetch_assoc();
+            
+            // Verify password using MD5 (same as staff)
+            if (md5($password) === $admin['admin_password']) {
+                // Set session variables
+                $_SESSION['admin_id'] = $admin['admin_ID'];
+                $_SESSION['admin_name'] = $admin['admin_name'];
+                $_SESSION['admin_email'] = $admin['admin_email'];
+                $_SESSION['admin_username'] = $admin['admin_username'];
+                $_SESSION['role'] = 'admin';
+
+                header('Location: a_dashboard.php');
+                exit();
+            } else {
+                $error_message = 'Invalid username or password';
+            }
+        } else {
+            $error_message = 'Invalid username or password';
+        }
+        $stmt->close();
     }
 }
 ?>
@@ -55,8 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <form action="loginadmin.php" method="POST">
                     <div class="styled-input">
-                        <span class="material-icons">admin_panel_settings</span>
-                        <input type="text" name="username" placeholder="Admin Username" required>
+                        <span class="material-icons">person</span>
+                        <input type="text" name="username" placeholder="Email or Username" required>
                     </div>
 
                     <div class="styled-input">
@@ -77,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <span class="material-icons">eco</span>
                 <span></span>
             </div>
-            <p>Authorized Users Only</p>
+            <p>Admin Portal - Authorized Users Only</p>
         </div>
     </div>
 </body>

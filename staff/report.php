@@ -1,7 +1,94 @@
 <!-- 
  Frontend: Qai 
- Backend: Amirah
+ Backend: Amirah, Qis
  -->
+<?php
+session_start();
+
+// Check if staff is logged in
+if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
+    header("Location: ../login.php");
+    exit;
+}
+
+include '../config/db_connect.php';
+
+// Get filter values
+$report_type = isset($_GET['report_type']) ? $_GET['report_type'] : 'all';
+$date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
+$date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
+
+// Calculate TOTAL REVENUE (All-time, completed orders only - NOT affected by filters)
+$total_revenue_query = "SELECT SUM(order_totalAmount) as total_revenue FROM orders WHERE order_status = 'Completed'";
+$total_revenue_result = mysqli_query($conn, $total_revenue_query);
+$total_revenue = mysqli_fetch_assoc($total_revenue_result)['total_revenue'] ?? 0;
+
+// Build query based on filters
+$query = "
+    SELECT 
+        o.order_ID,
+        o.order_date,
+        o.order_totalAmount,
+        o.order_amountPaid,
+        o.order_status,
+        s.student_name,
+        CASE 
+            WHEN o.staffID IS NOT NULL THEN CONCAT(st.staffName, ' (Staff)')
+            WHEN o.admin_ID IS NOT NULL THEN CONCAT(a.admin_name, ' (Admin)')
+            ELSE '-'
+        END AS updated_by,
+        GROUP_CONCAT(m.menuName SEPARATOR ', ') AS menu_items,
+        SUM(om.om_quantity) AS total_qty
+    FROM 
+        orders o
+    JOIN 
+        students s ON o.student_ID = s.student_ID
+    LEFT JOIN 
+        staff st ON o.staffID = st.staffID
+    LEFT JOIN
+        admins a ON o.admin_ID = a.admin_ID
+    JOIN 
+        order_menu om ON o.order_ID = om.order_ID
+    JOIN 
+        menus m ON om.menuID = m.menuID
+    WHERE 1=1
+";
+
+// Add date filters if provided
+if (!empty($date_from)) {
+    $query .= " AND DATE(o.order_date) >= '" . mysqli_real_escape_string($conn, $date_from) . "'";
+}
+if (!empty($date_to)) {
+    $query .= " AND DATE(o.order_date) <= '" . mysqli_real_escape_string($conn, $date_to) . "'";
+}
+
+// Filter by report type
+if ($report_type == 'completed') {
+    $query .= " AND o.order_status = 'Completed'";
+} elseif ($report_type == 'cancelled') {
+    $query .= " AND o.order_status = 'Cancelled'";
+} elseif ($report_type == 'pending') {
+    $query .= " AND o.order_status = 'Pending'";
+}
+
+$query .= " GROUP BY o.order_ID ORDER BY o.order_ID DESC";
+
+$result = mysqli_query($conn, $query);
+
+// Calculate TOTAL SALES (Affected by filters - completed orders only)
+$sales_query = "SELECT SUM(order_totalAmount) as total_sales FROM orders WHERE order_status = 'Completed'";
+
+if (!empty($date_from)) {
+    $sales_query .= " AND DATE(order_date) >= '" . mysqli_real_escape_string($conn, $date_from) . "'";
+}
+if (!empty($date_to)) {
+    $sales_query .= " AND DATE(order_date) <= '" . mysqli_real_escape_string($conn, $date_to) . "'";
+}
+
+$sales_result = mysqli_query($conn, $sales_query);
+$total_sales = mysqli_fetch_assoc($sales_result)['total_sales'] ?? 0;
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,213 +97,6 @@
     <title>SmartServe - Staff Report</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="sastyle.css">
-    
-    <style>
-        body {
-            overflow-x: hidden;
-        }
-
-        .main-content {
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            margin-left: 250px;
-        }
-
-        /* Report Header - CENTERED */
-        .report-header {
-            text-align: center;
-            margin-bottom: 20px;
-            position: relative;
-            width: 100%;
-            max-width: 850px;
-        }
-
-        .report-title-box {
-            background-color: white;
-            padding: 12px 25px;
-            border-radius: 16px;
-            display: inline-block;
-            margin-bottom: 12px;
-        }
-
-        .report-title-box h2 {
-            font-size: 22px;
-            font-weight: bold;
-            margin: 0 0 3px 0;
-        }
-
-        .report-title-box .report-date {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        /* Export Button - POSITIONED */
-        .export-btn {
-            position: absolute;
-            right: 0;
-            top: 0;
-            background-color: #000;
-            color: white;
-            padding: 8px 28px;
-            border-radius: 20px;
-            border: none;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .export-btn:hover {
-            background-color: #333;
-        }
-
-        /* Filters Section - CENTERED */
-        .filters-section {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 18px;
-            width: 100%;
-            max-width: 850px;
-        }
-
-        .filter-dropdown {
-            padding: 8px 20px;
-            border-radius: 20px;
-            border: none;
-            background-color: white;
-            font-size: 13px;
-            cursor: pointer;
-            min-width: 150px;
-        }
-
-        /* Report Table Container - CENTERED */
-        .report-table-container {
-            background-color: #d3d3d3;
-            padding: 15px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 850px;
-        }
-
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            table-layout: fixed;
-        }
-
-        .report-table thead {
-            background-color: #888;
-        }
-
-        .report-table th {
-            padding: 10px 6px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: bold;
-            color: #000;
-            border: 1px solid #666;
-            word-wrap: break-word;
-        }
-
-        /* Column Widths */
-        .report-table th:nth-child(1) { width: 8%; }
-        .report-table th:nth-child(2) { width: 10%; }
-        .report-table th:nth-child(3) { width: 16%; }
-        .report-table th:nth-child(4) { width: 12%; }
-        .report-table th:nth-child(5) { width: 36%; }
-        .report-table th:nth-child(6) { width: 12%; }
-
-        .report-table tbody tr {
-            background-color: #b8b8b8;
-        }
-
-        .report-table tbody tr:nth-child(even) {
-            background-color: #c8c8c8;
-        }
-
-        .report-table td {
-            padding: 10px 6px;
-            text-align: center;
-            font-size: 12px;
-            color: #000;
-            border: 1px solid #666;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-
-        /* Menu Image */
-        .menu-picture {
-            width: 45px;
-            height: 45px;
-            margin: 0 auto;
-            overflow: hidden;
-            border-radius: 50%;
-            background-color: white;
-        }
-
-        .menu-picture img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .menu-description {
-            font-size: 10px;
-            line-height: 1.3;
-            text-align: left;
-            padding: 6px;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 25px;
-            color: #666;
-            font-size: 13px;
-        }
-
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .report-table {
-                font-size: 11px;
-            }
-            
-            .menu-picture {
-                width: 38px;
-                height: 38px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 10px;
-                margin-left: 0;
-            }
-
-            .export-btn {
-                position: static;
-                display: block;
-                margin: 12px auto 0;
-            }
-
-            .filters-section {
-                flex-direction: column;
-            }
-
-            .report-table th:nth-child(5),
-            .report-table td:nth-child(5) {
-                display: none;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -230,10 +110,10 @@
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
+                    <li><a href="dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
                     <li><a href="menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
                     <li><a href="order_management.php"><span class="material-symbols-outlined">order_approve</span> Orders</a></li>
-                    <li><a href="report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
+                    <li class="active"><a href="report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
                     <li class="nav-divider"></li>
                     <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
                     <li><a href="../logout.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
@@ -241,101 +121,141 @@
             </nav>
         </div>
     </div>
+
     <!-- Main content area -->
     <div class="main-content staff-report-content">
-    <?php
-    // Dummy data
-    $mock_menu = [
-        ['id' => 1, 'name' => 'Nasi Lemak Special', 'price' => 5.00, 'description' => 'Fragrant coconut rice with sambal, anchovies, and egg.', 'image' => 'nasilemak.jpg'],
-        ['id' => 2, 'name' => 'Mee Goreng Mamak', 'price' => 4.50, 'description' => 'Spicy stir-fried noodles with tofu and vegetables.', 'image' => 'meegoreng.jpg'],
-        ['id' => 3, 'name' => 'Teh Tarik Ais', 'price' => 2.50, 'description' => 'Traditional Malaysian pulled milk tea with ice.', 'image' => 'tehtarik.jpg'],
-        ['id' => 4, 'name' => 'Hainanese Chicken Rice', 'price' => 7.50, 'description' => 'Steamed chicken served with seasoned rice and ginger chili.', 'image' => 'chickenrice.jpg']
-    ];
-
-    function getMenuType($name) {
-        $name_lower = strtolower($name);
-        if (strpos($name_lower, 'teh') !== false || strpos($name_lower, 'ais') !== false) {
-            return 'Beverages';
-        }
-        return 'Main Course';
-    }
-    ?>
-
-    <div class="header">
-        <div class="title">
-            <h2>Reports</h2>
-            <p>Generated: <?php echo date('d/m/Y'); ?></p>
+        <div class="header">
+            <div class="title">
+                <h2>Sales Report</h2>
+                <p>Generated: <?php echo date('d M Y, h:i A'); ?></p>
+            </div>
+            <a href="export_report.php?report_type=<?php echo $report_type; ?>&date_from=<?php echo $date_from; ?>&date_to=<?php echo $date_to; ?>" target="_blank" class="export-btn">
+                <span class="material-symbols-outlined" style="font-size: 16px;">print</span> Print Report
+            </a>
         </div>
-        <button onclick="window.print()" class="export-btn">
-            <span class="material-symbols-outlined" style="font-size: 16px;">print</span> Print Report
-        </button>
+
+        <!-- Total Revenue (All-time - NOT affected by filters) -->
+        <div class="total-revenue-box revenue-alltime">
+            <span class="material-symbols-outlined">account_balance</span>
+            <div class="revenue-info">
+                <span class="revenue-label">Total Revenue (All-Time)</span>
+                <span class="revenue-amount">RM <?php echo number_format($total_revenue, 2); ?></span>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <form method="GET" action="" class="filters-container">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label>Report Type</label>
+                    <select name="report_type" class="filter-dropdown">
+                        <option value="all" <?php echo ($report_type == 'all') ? 'selected' : ''; ?>>All Orders</option>
+                        <option value="completed" <?php echo ($report_type == 'completed') ? 'selected' : ''; ?>>Completed Only</option>
+                        <option value="pending" <?php echo ($report_type == 'pending') ? 'selected' : ''; ?>>Pending Only</option>
+                        <option value="cancelled" <?php echo ($report_type == 'cancelled') ? 'selected' : ''; ?>>Cancelled Only</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>From Date</label>
+                    <input type="date" name="date_from" class="filter-input" value="<?php echo $date_from; ?>">
+                </div>
+
+                <div class="filter-group">
+                    <label>To Date</label>
+                    <input type="date" name="date_to" class="filter-input" value="<?php echo $date_to; ?>">
+                </div>
+
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="filter-submit-btn">Apply Filter</button>
+                </div>
+
+                <?php if (!empty($date_from) || !empty($date_to) || $report_type != 'all'): ?>
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <a href="report.php" class="filter-reset-btn">Reset</a>
+                </div>
+                <?php endif; ?>
+            </div>
+        </form>
+
+        <!-- Report Table -->
+        <div class="report-table-container">
+            <!-- Total Sales (Affected by filters) -->
+            <div class="total-revenue-box revenue-filtered">
+                <span class="material-symbols-outlined">payments</span>
+                <div class="revenue-info">
+                    <span class="revenue-label">
+                        <?php 
+                        if (!empty($date_from) || !empty($date_to)) {
+                            echo "Sales for Period";
+                        } else {
+                            echo "Total Sales";
+                        }
+                        ?>
+                    </span>
+                    <span class="revenue-amount">RM <?php echo number_format($total_sales, 2); ?></span>
+                </div>
+            </div>
+
+            <div class="table-scroll-wrapper">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Menu Item(s)</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Updated By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (mysqli_num_rows($result) > 0): ?>
+                            <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                            <tr>
+                                <td>#<?php echo $row['order_ID']; ?></td>
+                                <td><?php echo date('d/m/Y', strtotime($row['order_date'])); ?></td>
+                                <td><?php echo htmlspecialchars($row['student_name']); ?></td>
+                                <td><strong><?php echo htmlspecialchars($row['menu_items']); ?></strong></td>
+                                <td><?php echo $row['total_qty']; ?></td>
+                                <td>RM <?php echo number_format($row['order_totalAmount'], 2); ?></td>
+                                <td>
+                                    <?php
+                                    $status_class = '';
+                                    switch($row['order_status']) {
+                                        case 'Completed': $status_class = 'status-completed'; break;
+                                        case 'Pending': $status_class = 'status-pending'; break;
+                                        case 'Preparing': $status_class = 'status-preparing'; break;
+                                        case 'Ready for Pickup': $status_class = 'status-ready'; break;
+                                        case 'Cancelled': $status_class = 'status-cancelled'; break;
+                                    }
+                                    ?>
+                                    <span class="status-badge <?php echo $status_class; ?>"><?php echo $row['order_status']; ?></span>
+                                </td>
+                                <td><?php echo htmlspecialchars($row['updated_by']); ?></td>
+                            </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="8" class="empty-state">
+                                    <h3>No orders found</h3>
+                                    <p>Try adjusting your filters or date range.</p>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <form method="GET" action="" class="filters-container">
-        <div class="filters-row">
-            <div class="filter-group">
-                <label>Report Type</label>
-                <select name="report_type" class="filter-dropdown">
-                    <option value="inventory">Sales Report</option>
-                    <option value="sales">Sales Performance</option>
-                    <option value="orders">Order Summary</option>
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label>From Date</label>
-                <input type="date" name="date_from" class="filter-input">
-            </div>
-
-            <div class="filter-group">
-                <label>To Date</label>
-                <input type="date" name="date_to" class="filter-input">
-            </div>
-
-            <div class="filter-group">
-                <label>&nbsp;</label> <button type="submit" class="filter-submit-btn">Apply Filter</button>
-            </div>
-        </div>
-    </form>
-
-    <div class="report-table-container">
-    <table class="report-table">
-        <thead>
-            <tr>
-                <th>Order ID</th>
-                <th>Date</th>
-                <th>Menu Item(s)</th>
-                <th>Qty</th>
-                <th>Amount Paid</th>
-                <th>Status</th>
-                <th>Staff</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php 
-            // Dummy data
-            $sales_reports = [
-                ['id' => 7721, 'date' => '11/01/2026', 'items' => 'Nasi Lemak Special', 'qty' => 2, 'paid' => 10.00, 'status' => 'Completed', 'staff' => 'Amirah'],
-                ['id' => 7722, 'date' => '11/01/2026', 'items' => 'Teh Tarik Ais', 'qty' => 1, 'paid' => 2.50, 'status' => 'Completed', 'staff' => 'Qis'],
-                ['id' => 7723, 'date' => '10/01/2026', 'items' => 'Mee Goreng Mamak', 'qty' => 3, 'paid' => 13.50, 'status' => 'Completed', 'staff' => 'Elya']
-            ];
-
-            foreach($sales_reports as $report): ?>
-            <tr>
-                <td>#<?php echo $report['id']; ?></td>
-                <td><?php echo $report['date']; ?></td>
-                <td><strong><?php echo $report['items']; ?></strong></td>
-                <td><?php echo $report['qty']; ?></td>
-                <td>RM <?php echo number_format($report['paid'], 2); ?></td>
-                <td>
-                    <span class="status-badge status-completed"><?php echo $report['status']; ?></span>
-                </td>
-                <td><?php echo $report['staff']; ?></td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
-</div>
 </body>
 </html>
+
+<?php
+mysqli_close($conn);
+?>

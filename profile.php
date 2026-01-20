@@ -3,6 +3,135 @@
  Backend: Qis 
  -->
 
+ <?php
+// ================= BACKEND START ================= //
+session_start();
+include 'config/db_connect.php';
+
+// 1. Check Login
+if (!isset($_SESSION['student_id']) || $_SESSION['role'] !== 'student') {
+    header("Location: login.php");
+    exit;
+}
+
+$student_id = $_SESSION['student_id'];
+$success_message = '';
+$error_message = '';
+
+// 2. Fetch Data
+// Matches your DB columns: student_name, student_email, student_username, student_password
+$query = "SELECT * FROM students WHERE student_ID = ? AND is_deleted = 0";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $student_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$student = $result->fetch_assoc();
+$stmt->close();
+
+if (!$student) {
+    session_destroy();
+    header("Location: login.php");
+    exit;
+}
+
+// 3. Handle Update
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $name = trim($_POST['studentName']);
+    $email = trim($_POST['studentEmail']);
+    $username = trim($_POST['studentUsername']);
+    
+    $current_password = $_POST['currentPassword'];
+    $new_password = $_POST['newPassword'];
+    $confirm_password = $_POST['confirmPassword'];
+
+    // Basic Validation
+    if (empty($name) || empty($email) || empty($username)) {
+        $error_message = "Name, Email, and Username are required.";
+    } else {
+        // --- UNIQUENESS CHECK (Email) ---
+        $check_email = "SELECT student_ID FROM students WHERE student_email = ? AND student_ID != ?";
+        $stmt = $conn->prepare($check_email);
+        $stmt->bind_param("si", $email, $student_id);
+        $stmt->execute();
+        if ($stmt->get_result()->num_rows > 0) {
+            $error_message = "Email is already taken.";
+            $stmt->close();
+        } else {
+            $stmt->close();
+            
+            // --- UNIQUENESS CHECK (Username) ---
+            $check_user = "SELECT student_ID FROM students WHERE student_username = ? AND student_ID != ?";
+            $stmt = $conn->prepare($check_user);
+            $stmt->bind_param("si", $username, $student_id);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows > 0) {
+                $error_message = "Username is already taken.";
+                $stmt->close();
+            } else {
+                $stmt->close();
+
+                // --- UPDATE LOGIC ---
+                // Scenario A: Update Info Only (No Password)
+                if (empty($current_password) && empty($new_password)) {
+                    $update_query = "UPDATE students SET student_name = ?, student_email = ?, student_username = ?, updated_at = NOW() WHERE student_ID = ?";
+                    $stmt = $conn->prepare($update_query);
+                    $stmt->bind_param("sssi", $name, $email, $username, $student_id);
+                    
+                    if ($stmt->execute()) {
+                        $success_message = "Profile updated successfully!";
+                        $_SESSION['student_name'] = $name;
+                        $_SESSION['student_email'] = $email;
+                        // Refresh data
+                        $student['student_name'] = $name;
+                        $student['student_email'] = $email;
+                        $student['student_username'] = $username;
+                    } else {
+                        $error_message = "Update failed.";
+                    }
+                    $stmt->close();
+                } 
+                // Scenario B: Update Password too
+                else {
+                    if (empty($current_password)) {
+                        $error_message = "Enter current password to change it.";
+                    } elseif ($new_password !== $confirm_password) {
+                        $error_message = "New passwords do not match.";
+                    } else {
+                        // HYBRID CHECK (Handles Aleesya's Bcrypt & Others' MD5)
+                        $db_pass = $student['student_password'];
+                        $is_md5 = (md5($current_password) === $db_pass);
+                        $is_bcrypt = password_verify($current_password, $db_pass);
+
+                        if (!$is_md5 && !$is_bcrypt) {
+                            $error_message = "Current password is incorrect.";
+                        } else {
+                            $new_password_hash = md5($new_password); // Save as MD5
+                            
+                            $update_query = "UPDATE students SET student_name = ?, student_email = ?, student_username = ?, student_password = ?, updated_at = NOW() WHERE student_ID = ?";
+                            $stmt = $conn->prepare($update_query);
+                            $stmt->bind_param("ssssi", $name, $email, $username, $new_password_hash, $student_id);
+                            
+                            if ($stmt->execute()) {
+                                $success_message = "Password updated successfully!";
+                                $_SESSION['student_name'] = $name;
+                                $_SESSION['student_email'] = $email;
+                                $student['student_name'] = $name;
+                                $student['student_email'] = $email;
+                                $student['student_username'] = $username;
+                                $student['student_password'] = $new_password_hash;
+                            } else {
+                                $error_message = "Update failed.";
+                            }
+                            $stmt->close();
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,10 +139,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartServe - Student Profile</title>
 
-    <!-- Google Fonts Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        .msg-box { padding: 12px; margin-bottom: 20px; border-radius: 5px; font-size: 0.9em; font-weight: 500; }
+        .msg-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .msg-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .pass-label { font-size: 0.85em; color: #666; margin-top: 10px; display: block; margin-bottom: 5px; font-weight: bold;}
+    </style>
 </head>
+
 <body class="staff-style-student-page">
 <!-- ================= NAVIGATION BAR ================= -->
 <header>
@@ -38,16 +174,31 @@
 <!-- ================= PROFILE CARD ================= -->
 <div class="profile-card">
     <h2>Profile</h2>
-    <form>
-        <input type="text" class="input-field" placeholder="Name" required>
-        <input type="email" class="input-field" placeholder="Email" required>
-        <input type="text" class="input-field" placeholder="Username" required>
-        <input type="password" class="input-field" placeholder="Password" required>
+
+    <?php if ($success_message): ?>
+        <div class="msg-box msg-success"><?php echo $success_message; ?></div>
+    <?php endif; ?>
+    <?php if ($error_message): ?>
+        <div class="msg-box msg-error"><?php echo $error_message; ?></div>
+    <?php endif; ?>
+
+    <form method="POST" action="">
+        <input type="text" name="studentName" class="input-field" placeholder="Name" value="<?php echo htmlspecialchars($student['student_name']); ?>" required>
+        
+        <input type="email" name="studentEmail" class="input-field" placeholder="Email" value="<?php echo htmlspecialchars($student['student_email']); ?>" required>
+        
+        <input type="text" name="studentUsername" class="input-field" placeholder="Username" value="<?php echo htmlspecialchars($student['student_username']); ?>" required>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+        <span class="pass-label">Change Password (Optional)</span>
+
+        <input type="password" name="currentPassword" class="input-field" placeholder="Current Password">
+        <input type="password" name="newPassword" class="input-field" placeholder="New Password">
+        <input type="password" name="confirmPassword" class="input-field" placeholder="Confirm New Password">
 
         <button type="submit" class="btn-update">Update</button>
     </form>
 </div>
-
 
 </body>
 </html>

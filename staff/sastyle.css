@@ -33,6 +33,49 @@ p, a, label {
     box-shadow: 4px 0 15px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
     z-index: 1000;
+    
+    overflow: hidden;
+}
+
+/* .sidebar-nav::-webkit-scrollbar {
+  width: 0;                     
+  background: transparent;
+} */
+
+.sidebar-nav {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.3) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background-color: rgba(255,255,255,0.3);
+  border-radius: 10px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255,255,255,0.5);
+}
+
+
+.sidebar-top {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 20px;
 }
 
 /* Logo Section */
@@ -619,12 +662,76 @@ canvas {
 }
 
 /* ============================
+   PROFILE PAGE - NEW ADDITIONS
+   ============================ */
+
+/* Alert Messages */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+}
+
+.alert-success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.alert-error {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.alert .material-symbols-outlined {
+    font-size: 20px;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1b5e20;
+    margin-bottom: 6px;
+}
+
+.form-section .input-field {
+    margin-bottom: 0;
+}
+
+.form-divider {
+    border: none;
+    border-top: 1px dashed #ccdcc8;
+    margin: 25px 0 15px 0;
+}
+
+.form-note {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 15px;
+    font-style: italic;
+    text-align: left;
+}
+/* ============================
         ORDERS PAGE
    ============================ */
 
 /* Main Content Wrapper */
 .orders-menu-content {
-    margin-left: 260px; /* Aligned with sidebar */
+    margin-left: 260px; 
     padding: 40px;
     background-color: #f8faf8;
     min-height: 100vh;
@@ -645,13 +752,13 @@ canvas {
     width: 100%;
     border-collapse: collapse;
     background-color: transparent;
-    box-shadow: none; /* Shadow moved to container */
+    box-shadow: none; 
     table-layout: fixed;
 }
 
 /* Table Head */
 .orders-table thead {
-    background-color: #f0f4f0; /* Very light green tint */
+    background-color: #f0f4f0; 
 }
 
 .orders-table th {
@@ -667,13 +774,13 @@ canvas {
 
 /* Table Body Rows */
 .orders-table tbody tr {
-    background-color: transparent; /* Removed blue background */
+    background-color: transparent; 
     border-bottom: 1px solid #f0f0f0;
     transition: background-color 0.3s ease;
 }
 
 .orders-table tbody tr:hover {
-    background-color: #f9fbf9; /* Subtle green highlight on hover */
+    background-color: #f9fbf9; 
 }
 
 .orders-table td {
@@ -793,6 +900,7 @@ canvas {
     padding: 40px;
     background-color: #f8faf8;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 .report-summary-bar {
@@ -897,7 +1005,109 @@ canvas {
             background-color: #0056b3;
             transform: translateY(-2px);
         }
+/* ============================
+   REPORT PAGE - NEW ADDITIONS
+   ============================ */
 
+/* Total Revenue Box */
+.total-revenue-box {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+    color: white;
+    padding: 20px 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.total-revenue-box .material-symbols-outlined {
+    font-size: 36px;
+    opacity: 0.9;
+}
+
+.revenue-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.revenue-label {
+    font-size: 13px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.revenue-amount {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+/* Table Scroll Wrapper */
+.table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+    background: #f0f4f0;
+    border-radius: 10px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #c8e6c9;
+    border-radius: 10px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #a5d6a7;
+}
+
+/* Table inside scroll wrapper */
+.table-scroll-wrapper .report-table {
+    min-width: 900px;
+    width: 100%;
+    table-layout: auto;
+}
+
+/* Total Revenue - All Time (Above filters) */
+.total-revenue-box.revenue-alltime {
+    background: linear-gradient(135deg, #0056b3 0%, #007bff 100%);
+    max-width: 950px;
+    margin-bottom: 25px;
+}
+
+/* Total Sales - Filtered (Above table) */
+.total-revenue-box.revenue-filtered {
+    background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+}
+
+/* Reset Filter Button */
+.filter-reset-btn {
+    background: transparent;
+    color: #666;
+    border: 1px solid #ccdcc8;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+}
+
+.filter-reset-btn:hover {
+    background: #f0f4f0;
+    color: #1b5e20;
+    border-color: #1b5e20;
+}
 /* =========================================
    REPORT TABLE - MATCHES ORDERS THEME
    ========================================= */
@@ -918,7 +1128,7 @@ canvas {
     width: 100%;
     border-collapse: collapse;
     background-color: transparent;
-    table-layout: fixed;
+    /*table-layout: fixed;*/
 }
 
 /* Table Head - Matching Light Green Tint */
@@ -1047,6 +1257,7 @@ canvas {
     text-align: left;
 }
 
+
 /* Special Request Styling */
 .special-request {
     display: inline-flex;
@@ -1104,6 +1315,119 @@ canvas {
 .status-completed { background-color: #e8f5e9 !important; color: #2e7d32 !important; }    
 .status-cancelled { background-color: #eeeeee !important; color: #757575 !important; }    
 
+.updated-by {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #ddd;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .updated-by strong {
+        color: #333;
+    }
+
+/* ============================
+        SUCCESS MODAL
+   ============================ */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: #2e7d32;
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.modal-content .material-symbols-outlined {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.close-btn {
+    background-color: white;
+    color: #2e7d32;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background-color: #f0f4f0;
+    transform: scale(1.05);
+}
+
+/* Error Modal Variant */
+.modal-content.error {
+    background-color: #d32f2f;
+}
+
+.modal-content.error .close-btn {
+    color: #d32f2f;
+}
+
+/* Locked Status Message */
+.status-locked-msg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 12px 15px;
+    background-color: #fff3e0;
+    color: #e65100;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.status-locked-msg .material-symbols-outlined {
+    font-size: 18px;
+}
+
+/* Disabled select styling */
+select:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
 /*-------------------
     USER MANAGEMENT 
 ---------------------*/

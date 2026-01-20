@@ -2,17 +2,113 @@
  Frontend: Elya 
  Backend: Amirah 
  -->
+<?php
+session_start();
+
+// Check if admin is logged in
+if (!isset($_SESSION['admin_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: loginadmin.php");
+    exit;
+}
+
+// Include database connection
+include '../config/db_connect.php';
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
+    // Retrieve form data
+    $name = mysqli_real_escape_string($conn, $_POST['name']);
+    $description = mysqli_real_escape_string($conn, $_POST['description']);
+    $price = mysqli_real_escape_string($conn, $_POST['price']);
+    $menu_category = mysqli_real_escape_string($conn, $_POST['menuCategory']);
+    $food_type = mysqli_real_escape_string($conn, $_POST['foodType']);
+    $meal_type = mysqli_real_escape_string($conn, $_POST['mealType']);
+    $cuisine = mysqli_real_escape_string($conn, $_POST['cuisine']);
+    $flavour = mysqli_real_escape_string($conn, $_POST['flavour']);
+    $portion = mysqli_real_escape_string($conn, $_POST['portion']);
+    $availability = mysqli_real_escape_string($conn, $_POST['menuAvailability']);
+
+    // Handle file upload
+    $image_name = '';
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        $target_dir = "../img/";
+        $original_filename = basename($_FILES['image']['name']);
+        $file_extension = strtolower(pathinfo($original_filename, PATHINFO_EXTENSION));
+        
+        // Generate unique filename
+        $image_name = uniqid('menu_') . '.' . $file_extension;
+        $target_file = $target_dir . $image_name;
+
+        // Move uploaded file
+        if (!move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
+            $_SESSION['error_message'] = "Sorry, there was an error uploading your file.";
+            header("Location: addmenu.php");
+            exit();
+        }
+    }
+
+    // Admin is adding the menu - get admin_id from session, staff_id is NULL
+    $staff_id = NULL;
+    $admin_id = $_SESSION['admin_id'];
+
+    // Prepare SQL insert statement
+    $query = "INSERT INTO `menus` (
+        `menuName`, 
+        `menuDescription`, 
+        `menuPrice`, 
+        `menuImage`, 
+        `menuCategory`,
+        `foodType`,
+        `mealType`,
+        `cuisine`,
+        `flavour`,
+        `portion`,
+        `menuAvailability`,
+        `staff_id`,
+        `admin_id`
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = $conn->prepare($query);
+    $availability_int = ($availability == 'Available') ? 1 : 0;
+    $stmt->bind_param("ssdsssssssiii", 
+        $name, 
+        $description, 
+        $price, 
+        $image_name, 
+        $menu_category,
+        $food_type,
+        $meal_type,
+        $cuisine,
+        $flavour,
+        $portion,
+        $availability_int,
+        $staff_id,
+        $admin_id
+    );
+
+    // Execute the statement
+    if ($stmt->execute()) {
+        $_SESSION['success_message'] = "Menu item added successfully!";
+        header("Location: a_menu_management.php");
+        exit();
+    } else {
+        $_SESSION['error_message'] = "Error adding menu item: " . $stmt->error;
+        header("Location: a_addmenu.php");
+        exit();
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartServe - Staff Add Menu</title>
+    <title>SmartServe - Add Menu</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="../staff/sastyle.css">
 </head>
 <body>
-
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-top">
@@ -23,14 +119,14 @@
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="a_dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
-                    <li><a href="a_menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
-                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Order Management</a></li>
+                    <li><a href="a_dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
+                    <li class="active"><a href="a_menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
+                    <li><a href="a_order_management.php"><span class="material-symbols-outlined">order_approve</span> Orders</a></li>
                     <li><a href="user_management.php"><span class="material-symbols-outlined">manage_accounts</span> User Management</a></li>
                     <li><a href="a_report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
                     <li class="nav-divider"></li>
-                    <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
-                    <li><a href="../logout.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
+                    <li><a href="a_profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
+                    <li><a href="logoutadmin.php" class="logout-link"><span class="material-symbols-outlined">logout</span> Log Out</a></li>
                 </ul>
             </nav>
         </div>
@@ -51,7 +147,6 @@
     <div class="update-form-container">
         <form id="addForm" method="POST" enctype="multipart/form-data" class="staff-update-form">
             <div class="form-grid">
-                
                 <div class="image-upload-section">
                     <div class="menu-item-image">
                         <img id="menuItemImage" src="../img/placeholder.jpg" alt="Menu Preview" class="menu-item-img">
@@ -81,8 +176,79 @@
                         </div>
 
                         <div class="input-group">
+                            <label for="menu_category">Menu Category</label>
+                            <select id="menu_category" name="menuCategory" required>
+                                <option value="">Select Category</option>
+                                <option value="rice">Rice</option>
+                                <option value="noodles">Noodles</option>
+                                <option value="soup">Soup</option>
+                                <option value="dessert">Dessert</option>
+                                <option value="drinks">Drinks</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="food_type">Food Type</label>
+                            <select id="food_type" name="foodType" required>
+                                <option value="">Select Food Type</option>
+                                <option value="rice">Rice</option>
+                                <option value="noodles">Noodles</option>
+                                <option value="soup">Soup</option>
+                                <option value="dessert">Dessert</option>
+                                <option value="drinks">Drinks</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="meal_type">Meal Type</label>
+                            <select id="meal_type" name="mealType" required>
+                                <option value="">Select Meal Type</option>
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="cuisine">Cuisine</label>
+                            <select id="cuisine" name="cuisine" required>
+                                <option value="">Select Cuisine</option>
+                                <option value="malay">Malay</option>
+                                <option value="chinese">Chinese</option>
+                                <option value="indian">Indian</option>
+                                <option value="western">Western</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="flavour">Flavour</label>
+                            <select id="flavour" name="flavour" required>
+                                <option value="">Select Flavour</option>
+                                <option value="spicy">Spicy</option>
+                                <option value="sweet">Sweet</option>
+                                <option value="savoury">Savoury</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="portion">Portion</label>
+                            <select id="portion" name="portion" required>
+                                <option value="">Select Portion</option>
+                                <option value="light">Light</option>
+                                <option value="medium">Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
                             <label for="availability">Initial Availability</label>
-                            <select id="availability" name="availability" required>
+                            <select id="availability" name="menuAvailability" required>
                                 <option value="Available" selected>Available</option>
                                 <option value="Out of Stock">Out of Stock</option>
                             </select>
@@ -112,5 +278,8 @@
 </script>
 
 </body>
-
 </html>
+
+<?php
+mysqli_close($conn);
+?>
