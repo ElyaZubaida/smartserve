@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <nav>
                 <ul>
                     <li><a href="menu.php"><span class="material-symbols-outlined">home</span> Home</a></li>
-                    <li><a href="ai.php" class="active"><span class="material-symbols-outlined">psychology</span> Recommendation</a></li>
+                    <li><a href="ai.php" class="active"><span class="material-symbols-outlined">psychology</span> Food Recommendation</a></li>
                     <li><a href="myorders.php"><span class="material-symbols-outlined">receipt_long</span> Orders</a></li>
                     <li><a href="cart.php"><span class="material-symbols-outlined">shopping_cart</span> Cart</a></li>
                     <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
