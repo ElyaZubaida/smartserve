@@ -161,11 +161,12 @@
 
         <!-- Cart Section -->
         <div class="cart-container">
-            <div class="cart-title">
-                <h1>My Cart</h1>
-                <a href="menu.php" class="btn-continue-browsing">
-                    <span class="material-symbols-outlined">arrow_back</span> Continue Browsing
-                </a>
+            <div class="section-header-box">
+                <div class="header-title-group">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <h1>Your Shopping Cart</h1>
+                </div>
+                <p>Add items to your cart before proceeding to checkout.</p>
             </div>
 
             <?php if (count($items_array) > 0): ?>

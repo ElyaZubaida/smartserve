@@ -183,20 +183,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <?php endif; ?>
 
     <form method="POST" action="">
-        <input type="text" name="studentName" class="input-field" placeholder="Name" value="<?php echo htmlspecialchars($student['student_name']); ?>" required>
+        <div class="input-group">
+            <label><span class="material-symbols-outlined">person</span> Full Name</label>
+            <input type="text" name="studentName" class="input-field" placeholder="Enter your full name" value="<?php echo htmlspecialchars($student['student_name']); ?>" required>
+        </div>
         
-        <input type="email" name="studentEmail" class="input-field" placeholder="Email" value="<?php echo htmlspecialchars($student['student_email']); ?>" required>
+        <div class="input-group">
+            <label><span class="material-symbols-outlined">mail</span> Email Address</label>
+            <input type="email" name="studentEmail" class="input-field" placeholder="name@example.com" value="<?php echo htmlspecialchars($student['student_email']); ?>" required>
+        </div>
         
-        <input type="text" name="studentUsername" class="input-field" placeholder="Username" value="<?php echo htmlspecialchars($student['student_username']); ?>" required>
+        <div class="input-group">
+            <label><span class="material-symbols-outlined">badge</span> Username</label>
+            <input type="text" name="studentUsername" class="input-field" placeholder="Choose a unique username" value="<?php echo htmlspecialchars($student['student_username']); ?>" required>
+        </div>
 
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
-        <span class="pass-label">Change Password (Optional)</span>
+        <hr class="form-divider">
+        <h3 class="form-subtitle">Security Settings</h3>
 
-        <input type="password" name="currentPassword" class="input-field" placeholder="Current Password">
-        <input type="password" name="newPassword" class="input-field" placeholder="New Password">
-        <input type="password" name="confirmPassword" class="input-field" placeholder="Confirm New Password">
+        <div class="input-group">
+            <label><span class="material-symbols-outlined">lock_open</span> Current Password</label>
+            <input type="password" name="currentPassword" class="input-field" placeholder="Verify current password">
+        </div>
+        
+        <div class="input-group">
+            <label><span class="material-symbols-outlined">lock</span> New Password</label>
+            <input type="password" name="newPassword" class="input-field" placeholder="Enter new password">
+        </div>
+        
+        <div class="input-group">
+            <label><span class="material-symbols-outlined">verified_user</span> Confirm New Password</label>
+            <input type="password" name="confirmPassword" class="input-field" placeholder="Repeat new password">
+        </div>
 
-        <button type="submit" class="btn-update">Update</button>
+        <button type="submit" class="btn-update">Update Profile</button>
     </form>
 </div>
 

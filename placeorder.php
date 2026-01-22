@@ -125,8 +125,11 @@
         </header>
 
         <div class="checkout-container">
-            <div class="checkout-title">
-                <h1>Review & Place Order</h1>
+            <div class="section-header-box">
+                <div class="header-title-group">
+                    <span class="material-symbols-outlined">receipt_long</span>
+                    <h1>Review & Place Order</h1>
+                </div>
                 <p>Please check your items before confirming</p>
             </div>
 
