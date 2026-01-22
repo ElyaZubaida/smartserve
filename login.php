@@ -15,9 +15,11 @@
         if (empty($username) || empty($password)) {
             $error_message = 'Please enter both username and password';
         } else {
-            if ($role == 'student') {
-                // Query for student login
-                $query = "SELECT student_ID, student_name, student_email, student_password FROM students WHERE student_email = ? OR student_name = ?";
+            // ================= STUDENT LOGIN ================= //
+           if ($role == 'student') {
+                // FIXED: Changed 'student_name' to 'student_username'
+                // FIXED: Added 'AND is_deleted = 0'
+                $query = "SELECT student_ID, student_name, student_email, student_password FROM students WHERE (student_email = ? OR student_username = ?) AND is_deleted = 0";
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param("ss", $username, $username);
                 $stmt->execute();
@@ -26,15 +28,17 @@
                 if ($result->num_rows > 0) {
                     $user = $result->fetch_assoc();
                     
-                    // Verify password (assuming passwords are hashed with password_hash())
-                    if (md5($password) === $user['student_password']) { // Change to md5 to match existing system
-                        // Set session variables
+                    // FIXED: Hybrid Password Check (MD5 for Alex, Bcrypt for Aleesya)
+                    $db_pass = $user['student_password'];
+                    $is_md5 = (md5($password) === $db_pass);
+                    $is_bcrypt = password_verify($password, $db_pass);
+
+                    if ($is_md5 || $is_bcrypt) {
                         $_SESSION['student_id'] = $user['student_ID'];
                         $_SESSION['student_name'] = $user['student_name'];
                         $_SESSION['student_email'] = $user['student_email'];
                         $_SESSION['role'] = 'student';
 
-                        // Redirect to menu page
                         header('Location: menu.php');
                         exit();
                     } else {
@@ -43,10 +47,11 @@
                 } else {
                     $error_message = 'Invalid username or password';
                 }
-            } 
+            }
+            // ================= STAFF LOGIN (FIXED) ================= //
             else {
-                // Query for staff login - check email OR username
-                $query = "SELECT staffID, staffName, staffEmail, staffPassword FROM staff WHERE staffEmail = ? OR staffUsername = ?";
+                // Check email OR username, AND ensure account is not deleted
+                $query = "SELECT staffID, staffName, staffEmail, staffPassword FROM staff WHERE (staffEmail = ? OR staffUsername = ?) AND is_deleted = 0";
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param("ss", $username, $username);
                 $stmt->execute();
@@ -55,20 +60,29 @@
                 if ($result->num_rows > 0) {
                     $user = $result->fetch_assoc();
                     
-                    // Verify password using MD5
-                    if (md5($password) === $user['staffPassword']) {
-                        // Set session variables
+                    // --- HYBRID PASSWORD CHECK START ---
+                    $db_password = $user['staffPassword'];
+                    
+                    // 1. Check if password matches Plain Text (Old users like Sarah)
+                    $is_plain = ($password === $db_password);
+                    
+                    // 2. Check if password matches MD5 (New users like Mike)
+                    $is_md5 = (md5($password) === $db_password);
+
+                    // If EITHER is true, log them in
+                    if ($is_plain || $is_md5) {
                         $_SESSION['staff_id'] = $user['staffID'];
+                        $_SESSION['staffID'] = $user['staffID']; // Setting both keys to be safe
                         $_SESSION['staff_name'] = $user['staffName'];
                         $_SESSION['staff_email'] = $user['staffEmail'];
                         $_SESSION['role'] = 'staff';
 
-                        // Redirect to staff dashboard
-                        header('Location: staff/dashboard.php');
+                        header('Location: staff/dashboard.php'); // Redirect to dashboard
                         exit();
                     } else {
                         $error_message = 'Invalid username or password';
                     }
+                    // --- HYBRID PASSWORD CHECK END ---
                 } else {
                     $error_message = 'Invalid username or password';
                 }
@@ -84,7 +98,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Serve - Login</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="style.css"> <!-- Link to your external CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="login-page">
 
@@ -177,4 +191,3 @@
     toggleSignup(); 
 </script>
 </html>
-

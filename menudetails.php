@@ -48,6 +48,9 @@
     {
         $availability_message = "This item is currently unavailable.";
     }
+
+    $img = $menu_item['menuImage'];
+    if (strpos($img, 'img/') === false) { $img = 'img/' . $img; }
 ?>
 
 <!DOCTYPE html>
@@ -111,8 +114,7 @@
             <section class="menu-details-card">
                 
                 <div class="details-image-section">
-                    <img src="<?php echo htmlspecialchars($menu_item['menuImage']); ?>" 
-                         alt="<?php echo htmlspecialchars($menu_item['menuName']); ?>">
+                    <img src="<?php echo htmlspecialchars($img); ?>" alt="Food Image">
                 </div>
 
                 <div class="details-info-section">
