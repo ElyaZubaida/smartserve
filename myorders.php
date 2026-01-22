@@ -62,8 +62,12 @@
         </header>
 
         <div class="orders-container">
-            <div class="orders-title">
-                <h1>My Orders</h1>
+            <div class="section-header-box">
+                <div class="header-title-group">
+                    <span class="material-symbols-outlined">receipt_long</span>
+                    <h1>My Order History</h1>
+                </div>
+                <p>Track your past meals and reorder your favorites easily.</p>
             </div>
 
             <?php if (count($orders) > 0): ?>

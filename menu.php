@@ -31,9 +31,44 @@
         {
             $menu_by_category[$category] = [];
         }
-
         $menu_by_category[$category][] = $item;
     }
+
+    // --- START AI RECOMMENDATION LOGIC ---
+    $recommended_items = [];
+
+    // 1. Check if the user has any order history
+    $history_check = $conn->query("SELECT o.order_ID FROM orders o JOIN order_menu om ON o.order_ID = om.order_ID WHERE o.student_ID = $student_id LIMIT 1");
+
+    if ($history_check->num_rows > 0) {
+        // SCENARIO A: Personalize using Python KNN
+        $api_url = 'http://127.0.0.1:5000/recommend_history?student_id=' . $student_id;
+        $response = @file_get_contents($api_url);
+        
+        if ($response) {
+            $rec_ids = json_decode($response, true);
+            if (!empty($rec_ids)) {
+                $ids = implode(',', $rec_ids);
+                $recommended_items = $conn->query("SELECT menuID, menuName, menuPrice, menuImage, menuDescription FROM menus WHERE menuID IN ($ids) LIMIT 3");
+            }
+        }
+    }
+
+    // 2. SCENARIO B: Cold Start or API Failure - Fallback to Popular Items
+    if (!$recommended_items || $recommended_items->num_rows == 0) {
+        $recommended_items = $conn->query("
+            SELECT m.menuID, m.menuName, m.menuPrice, m.menuImage, COUNT(om.menuID) as total_sold
+            FROM menus m
+            JOIN order_menu om ON m.menuID = om.menuID
+            GROUP BY m.menuID
+            ORDER BY total_sold DESC
+            LIMIT 3
+        ");
+        $is_popular = true; // Flag to change the subtitle in HTML
+    } else {
+        $is_popular = false;
+    }
+    // --- END AI RECOMMENDATION LOGIC ---
 ?>
 
 <!DOCTYPE html>
@@ -95,40 +130,43 @@
             
             <section class="menu-category ai-highlight" id="recommended">
                 <div class="category-header">
-                    <h2><span class="material-symbols-outlined">star_shine</span> AI Recommended for You</h2>
-                    <p>Based on your order history</p>
+                    <h2>
+                        <span class="material-symbols-outlined pulse-icon">
+                            <?php echo $is_popular ? 'trending_up' : 'auto_awesome'; ?>
+                        </span> 
+                        <?php echo $is_popular ? 'Trending Now' : 'AI Recommended for You'; ?>
+                    </h2>
+                    <p><?php echo $is_popular ? 'Most popular choices among students' : 'Smart recommendations based on your order history'; ?></p>
                 </div>
                 
                 <div class="menu-grid">
-                    <div class="menu-item featured">
-                        <a href="menudetails.php?id=1" class="item-link">
-                            <img src="img/nasilemak.jpg" alt="Nasi Lemak">
-                            <div class="item-info">
-                                <h3>Nasi Lemak Special</h3>
-                                <span class="price">RM 5.00</span>
-                            </div>
-                        </a>
-                    </div>
+                    <?php while($row = $recommended_items->fetch_assoc()): 
+                        $imgPath = $row['menuImage'];
+                        if (strpos($imgPath, 'img/') === false) { $imgPath = 'img/' . $imgPath; }
+                        
+                        // Fetch description - ensure your SQL query in the PHP section includes menuDescription!
+                        $desc = $row['menuDescription'] ?? 'Delicious choice tailored for you.';
+                    ?>
+                        <div class="menu-item featured ai-card">
 
-                    <div class="menu-item featured">
-                        <a href="menudetails.php?id=2" class="item-link">
-                            <img src="img/meegoreng.jpg" alt="Mee Goreng">
-                            <div class="item-info">
-                                <h3>Mee Goreng Mamak</h3>
-                                <span class="price">RM 4.50</span>
-                            </div>
-                        </a>
-                    </div>
+                            <a href="menudetails.php?id=<?php echo $row['menuID']; ?>" class="item-link">
+                                <div class="img-wrapper">
+                                    <img src="<?php echo htmlspecialchars($imgPath); ?>" onerror="this.src='img/default_food.png'" alt="Food">
+                                </div>
+                                <div class="item-info">
+                                    <h3 class="ai-title"><?php echo htmlspecialchars($row['menuName']); ?></h3>
+                                    
+                                    <p class="ai-desc">
+                                        <?php echo htmlspecialchars(strlen($desc) > 80 ? substr($desc, 0, 77) . '...' : $desc); ?>
+                                    </p>
 
-                    <div class="menu-item featured">
-                        <a href="menudetails.php?id=3" class="item-link">
-                            <img src="img/tehtarik.jpg" alt="Teh Tarik">
-                            <div class="item-info">
-                                <h3>Teh Tarik</h3>
-                                <span class="price">RM 6.00</span>
-                            </div>
-                        </a>
-                    </div>
+                                    <div class="item-footer">
+                                        <span class="price">RM <?php echo number_format($row['menuPrice'], 2); ?></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    <?php endwhile; ?>
                 </div>
             </section>
 
