@@ -332,7 +332,7 @@ $menu_item = mysqli_fetch_assoc($result);
                             <script>
                             function confirmDelete(menuId) {
                                 if (confirm('Are you sure you want to soft delete this menu item?')) {
-                                    window.location.href = 'a_deletemenu.php?id=' + menuId;
+                                    window.location.href = 'deletemenu.php?id=' + menuId;
                                 }
                             }
                             </script>
