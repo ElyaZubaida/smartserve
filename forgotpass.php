@@ -4,55 +4,80 @@
 -->
  <!-- BACKEND STARTED -->
  <?php
-session_start();
-include 'config/db_connect.php';
+    session_start();
+    include 'config/db_connect.php';
 
-$message = '';
-$msg_type = ''; 
+    $message = '';
+    $msg_type = ''; 
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = trim($_POST['username']);
-    $email = trim($_POST['email']); 
-    $new_pass = $_POST['new_password'];
-    $confirm_pass = $_POST['confirm_password'];
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') 
+    {
+        $username = trim($_POST['username']);
+        $email = trim($_POST['email']); 
+        $new_pass = $_POST['new_password'];
+        $confirm_pass = $_POST['confirm_password'];
 
-    if (empty($username) || empty($email) || empty($new_pass) || empty($confirm_pass)) {
-        $message = "All fields are required.";
-        $msg_type = "error";
-    } 
-    elseif ($new_pass !== $confirm_pass) {
-        $message = "New passwords do not match.";
-        $msg_type = "error";
-    } 
-    elseif (strlen($new_pass) < 6) {
-        $message = "Password must be at least 6 characters.";
-        $msg_type = "error";
-    } 
-    else {
-        // Verify User
-        $stmt = $conn->prepare("SELECT student_ID FROM students WHERE student_username = ? AND student_email = ? AND is_deleted = 0");
-        $stmt->bind_param("ss", $username, $email);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        if (empty($username) || empty($email) || empty($new_pass) || empty($confirm_pass)) {
+            $message = "All fields are required.";
+            $msg_type = "error";
+        } 
+        elseif ($new_pass !== $confirm_pass) {
+            $message = "New passwords do not match.";
+            $msg_type = "error";
+        } 
+        elseif (strlen($new_pass) < 6) {
+            $message = "Password must be at least 6 characters.";
+            $msg_type = "error";
+        } 
+        else {
+            // Try student first
+            $stmt = $conn->prepare(
+                "SELECT student_ID FROM students 
+                WHERE student_username = ? AND student_email = ? AND is_deleted = 0"
+            );
+            $stmt->bind_param("ss", $username, $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
 
-        if ($result->num_rows === 1) {
-            $new_hash = md5($new_pass);
-            $update_stmt = $conn->prepare("UPDATE students SET student_password = ?, updated_at = NOW() WHERE student_username = ?");
-            $update_stmt->bind_param("ss", $new_hash, $username);
+            if ($result->num_rows === 1) {
+                $new_hash = md5($new_pass);
+                $update = $conn->prepare(
+                    "UPDATE students SET student_password = ?, updated_at = NOW() 
+                    WHERE student_username = ?"
+                );
+                $update->bind_param("ss", $new_hash, $username);
+                $update->execute();
 
-            if ($update_stmt->execute()) {
                 $message = "Password reset successfully! You can login now.";
                 $msg_type = "success";
             } else {
-                $message = "System error. Please try again.";
-                $msg_type = "error";
+                // Try staff
+                $stmt = $conn->prepare(
+                    "SELECT staffID FROM staff 
+                    WHERE staffUsername = ? AND staffEmail = ? AND is_deleted = 0"
+                );
+                $stmt->bind_param("ss", $username, $email);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows === 1) {
+                    $new_hash = md5($new_pass);
+                    $update = $conn->prepare(
+                        "UPDATE staff SET staffPassword = ?, updated_at = NOW() 
+                        WHERE staffUsername = ?"
+                    );
+                    $update->bind_param("ss", $new_hash, $username);
+                    $update->execute();
+
+                    $message = "Password reset successfully! You can login now.";
+                    $msg_type = "success";
+                } else {
+                    $message = "Username and Email do not match.";
+                    $msg_type = "error";
+                }
             }
-        } else {
-            $message = "Username and Email do not match.";
-            $msg_type = "error";
         }
     }
-}
 ?>
 <!-- BACKEND ENDED -->
  

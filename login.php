@@ -176,7 +176,7 @@
     function toggleSignup() {
         if (staffRadio.checked) {
             signupSection.style.display = 'none';    // Hide Sign Up for Staff
-            forgotPasswordLink.style.display = 'none'; // Hide Forgot Password for Staff
+            forgotPasswordLink.style.display = 'block'; // Hide Forgot Password for Staff
             usernameInput.placeholder = 'Email or Username';
         } else {
             signupSection.style.display = 'block';   // Show for Students
