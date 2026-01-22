@@ -180,5 +180,30 @@
                 </div>
             </div>
         </div>
+        <script>
+    // 1. Get the current status from PHP
+    let currentStatus = "<?php echo $order['order_status']; ?>";
+    const orderId = "<?php echo $order_id; ?>";
+
+    function autoCheckStatus() {
+        // 2. Fetch the latest status from the database silently
+        fetch('check_status.php?order_id=' + orderId)
+            .then(response => response.text())
+            .then(latestStatus => {
+                latestStatus = latestStatus.trim();
+                
+                // 3. Compare: If the DB status is different from what we see on screen
+                if (latestStatus !== currentStatus) {
+                    console.log("Status updated to: " + latestStatus);
+                    // 4. Reload the page once to show the new status/tracker
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.log('Error checking status:', error));
+    }
+
+    // 5. Run this check every 5000 milliseconds (5 seconds)
+    setInterval(autoCheckStatus, 5000);
+</script>
     </body>
 </html>

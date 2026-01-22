@@ -375,6 +375,32 @@
 
             // Run every 5 seconds
             setInterval(updateStockStatus, 5000);
+
+            
+    // 1. Store the initial state of the menu
+    let menuFingerprint = "";
+
+    function checkMenuUpdates() {
+        fetch('check_menu.php')
+            .then(response => response.text())
+            .then(newFingerprint => {
+                // Initialize fingerprint on first run
+                if (menuFingerprint === "") {
+                    menuFingerprint = newFingerprint;
+                    return;
+                }
+
+                // 2. Compare: If the database count or timestamp has changed
+                if (newFingerprint.trim() !== menuFingerprint.trim()) {
+                    console.log("Menu change detected! Refreshing...");
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.log('Menu sync error:', error));
+    }
+
+    // 3. Check every 5 seconds
+    setInterval(checkMenuUpdates, 5000);
         </script>
     </body>
 </html>
