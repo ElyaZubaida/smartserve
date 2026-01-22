@@ -253,6 +253,11 @@ body {
     transition: 0.3s;
 }
 
+.staff-menu-card.out-of-stock {
+    opacity: 0.7;
+    border-color: #ffcdd2;
+}
+
 .staff-menu-card:hover {
     box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
@@ -261,6 +266,24 @@ body {
     width: 100%;
     height: 160px;
     object-fit: cover;
+}
+
+.staff-menu-img {
+    position: relative;
+}
+
+.stock-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #d32f2f;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .staff-menu-details {
@@ -320,7 +343,93 @@ body {
     background: #2e7d32;
     color: white;
 }
+/* Filter and Search Bar */
+.filter-search-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
 
+/* Search bar - full width */
+.search-form {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.search-btn {
+    padding: 10px 20px;
+    background: #000;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.search-btn:hover {
+    background: #333;
+}
+
+/* Filter row - aligned to the right */
+.filter-row {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.category-filter {
+    position: relative;
+    width: 200px;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 10px 35px 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    background: white;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.category-filter::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #666;
+}
 /* =========================================
    UPDATE MENU SPECIFIC STYLES
    ========================================= */
@@ -515,6 +624,8 @@ body {
 .dash-stat-card.items .stat-icon { background: #e3f2fd; color: #007bff; }
 .dash-stat-card.orders .stat-icon { background: #fff3e0; color: #ef6c00; }
 .dash-stat-card.pending .stat-icon { background: #ffebee; color: #d32f2f; }
+.dash-stat-card.users .stat-icon { background: #e0f7fa; color: #00838f; }
+.dash-stat-card.completed .stat-icon { background: #ede7f6; color: #5e35b1; }
 
 .dashboard-table-card, .dashboard-alert-card {
     background: white;
@@ -917,6 +1028,84 @@ canvas {
     overflow-x: hidden;
 }
 
+.report-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 10px 0 18px;
+}
+
+.report-tab {
+    background: #ffffff;
+    border: 1px solid #e0ece0;
+    color: #1b5e20;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    transition: 0.2s ease;
+}
+
+.report-tab.active {
+    background: #1b5e20;
+    color: #ffffff;
+    border-color: #1b5e20;
+}
+
+.report-subtabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+
+.report-subtab {
+    background: #f0f4f0;
+    border: 1px solid #ccdcc8;
+    color: #1b5e20;
+    padding: 6px 14px;
+    border-radius: 16px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+.report-subtab.active {
+    background: #2e7d32;
+    color: #ffffff;
+    border-color: #2e7d32;
+}
+
+.report-meta {
+    background: #ffffff;
+    border: 1px dashed #e0ece0;
+    color: #666;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    max-width: 950px;
+    margin-bottom: 20px;
+}
+
+.report-meta strong {
+    color: #1b5e20;
+}
+
+.chart-wrap {
+    max-width: 950px;
+    margin-bottom: 20px;
+}
+
+.chart-card {
+    background: #ffffff;
+    border: 1px solid #e0ece0;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+
 .report-summary-bar {
     display: flex;
     gap: 20px;
@@ -1222,17 +1411,22 @@ canvas {
             }
         }
 
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 10px;
-                margin-left: 0;
-            }
+@media (max-width: 768px) {
+    .main-content {
+        padding: 10px;
+        margin-left: 0;
+    }
 
-            .export-btn {
-                position: static;
-                display: block;
-                margin: 12px auto 0;
-            }
+    .report-tabs,
+    .report-subtabs {
+        justify-content: center;
+    }
+
+    .export-btn {
+        position: static;
+        display: block;
+        margin: 12px auto 0;
+    }
 
             .filters-section {
                 flex-direction: column;
@@ -1452,16 +1646,53 @@ select:disabled {
     gap: 10px;
 }
 
-.staff-menu-edit {
-    text-decoration: none;
-    color: #1b5e20;
-    transition: 0.3s;
+/* ============================
+   USER MANAGEMENT - ALERTS
+   ============================ */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.staff-menu-edit:hover {
-    transform: scale(1.2);
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
 }
 
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Role Badge Styles */
+.role-badge {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.role-admin {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.role-staff {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+.role-customer {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
 /* Ensure table rows are aligned for reading long names */
 .report-table td {
     padding: 15px;

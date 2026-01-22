@@ -7,6 +7,23 @@ if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
     exit;
 }
 
+// Check for the success flag immediately and clear it
+$showAddSuccess = false;
+if (isset($_SESSION['menu_added'])) {
+    $showAddSuccess = true;
+    unset($_SESSION['menu_added']);
+    unset($_SESSION['success_message']);
+}
+
+// Check for error message
+$showError = false;
+$errorMessage = '';
+if (isset($_SESSION['error_message'])) {
+    $showError = true;
+    $errorMessage = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+}
+
 // Include database connection
 include '../config/db_connect.php';
 
@@ -84,8 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
 
     // Execute the statement
     if ($stmt->execute()) {
+        $_SESSION['menu_added'] = true; 
         $_SESSION['success_message'] = "Menu item added successfully!";
-        header("Location: menu_management.php");
+        header("Location: addmenu.php");
         exit();
     } else {
         $_SESSION['error_message'] = "Error adding menu item: " . $stmt->error;
@@ -103,6 +121,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
     <title>SmartServe - Staff Add Menu</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="sastyle.css">
+     <style>
+        /* Success/Error Message Modal Styles */
+        .success-message {
+            background-color: #e8f5e9;
+            color: #228B22;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            max-width: 650px;
+            width: 100%;
+            margin: 20px auto;
+        }
+
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            max-width: 650px;
+            width: 100%;
+            margin: 20px auto;
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar -->
@@ -138,6 +184,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
             <span class="material-symbols-outlined">arrow_back</span> Back to List
         </a>
     </div>
+
+    <?php
+    // Display success message
+    if (isset($_GET['success']) && $_GET['success'] == 1) {
+        echo '<div class="success-message">✓ Menu item added successfully!</div>';
+    }
+
+    // Display error message
+    if (isset($_GET['error']) && $_GET['error'] == 1) {
+        $error_msg = isset($_SESSION['error_message']) ? $_SESSION['error_message'] : 'Failed to add menu item.';
+        echo '<div class="error-message">❌ ' . htmlspecialchars($error_msg) . '</div>';
+        unset($_SESSION['error_message']);
+    }
+    ?>
 
     <div class="update-form-container">
         <form id="addForm" method="POST" enctype="multipart/form-data" class="staff-update-form">
@@ -177,6 +237,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
                                 <option value="rice">Rice</option>
                                 <option value="noodles">Noodles</option>
                                 <option value="soup">Soup</option>
+                                <option value="wrapnbuns">Wrap & Buns</option>
+                                <option value="snacks">Snacks</option>
                                 <option value="dessert">Dessert</option>
                                 <option value="drinks">Drinks</option>
                             </select>
@@ -185,14 +247,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
 
                     <div class="input-row">
                         <div class="input-group">
-                            <label for="food_type">Food Type</label>
+                            <label for="food_type">Food Type <span class="tooltip-icon" title="Classify this meal based on a student's daily needs: Is it for staying healthy, fueling a long study session, a quick bite between classes, or a refreshing break?"><span class="material-symbols-outlined">info</span></span></label>
                             <select id="food_type" name="foodType" required>
                                 <option value="">Select Food Type</option>
-                                <option value="rice">Rice</option>
-                                <option value="noodles">Noodles</option>
-                                <option value="soup">Soup</option>
-                                <option value="dessert">Dessert</option>
-                                <option value="drinks">Drinks</option>
+                                <option value="healthy">Healthy</option>
+                                <option value="energy-boosting">Energy Boosting</option>
+                                <option value="refreshing">Refreshing</option>
+                                <option value="fastneasy">Fast & Easy</option>
                             </select>
                         </div>
 
@@ -203,6 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
                                 <option value="breakfast">Breakfast</option>
                                 <option value="lunch">Lunch</option>
                                 <option value="dinner">Dinner</option>
+                                <option value="anytime">Anytime</option>
                             </select>
                         </div>
                     </div>
@@ -235,9 +297,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
                             <label for="portion">Portion</label>
                             <select id="portion" name="portion" required>
                                 <option value="">Select Portion</option>
-                                <option value="light">Light</option>
-                                <option value="medium">Medium</option>
-                                <option value="large">Large</option>
+                                <option value="light">Light (Light Snack)</option>
+                                <option value="regular">Regular (Standard Meal)</option>
+                                <option value="large">Large (High Hunger)</option>
                             </select>
                         </div>
 
@@ -261,6 +323,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
     </div>
 </div>
 
+<!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <span class="material-symbols-outlined">check_circle</span>
+            <h2>Menu Added Successfully</h2>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content error">
+            <span class="material-symbols-outlined">error</span>
+            <h2 id="errorMessage">Error</h2>
+            <button class="close-btn" onclick="closeErrorModal()">Close</button>
+        </div>
+    </div>
+
 <script>
     function previewImage(event) {
         var reader = new FileReader();
@@ -270,7 +350,80 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_menu'])) {
         }
         reader.readAsDataURL(event.target.files[0]);
     }
+
+    function showSuccessModal() {
+        document.getElementById('successModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('successModal').style.display = 'none';
+        window.location.href = 'menu_management.php';
+    }
+
+    function showErrorModal(message) {
+        document.getElementById('errorMessage').innerText = message;
+        document.getElementById('errorModal').style.display = 'flex';
+    }
+
+    function closeErrorModal() {
+        document.getElementById('errorModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside (with redirect for success modal)
+    window.onclick = function(event) {
+    const successModal = document.getElementById('successModal');
+    const errorModal = document.getElementById('errorModal');
+    if (event.target == successModal) {
+        successModal.style.display = 'none';
+        window.location.href = 'menu_management.php';
+    }
+    if (event.target == errorModal) {
+        errorModal.style.display = 'none';
+    }
+}
+
+    // Auto-hide success/error messages after 5 seconds
+    window.onload = function() {
+        const successMsg = document.querySelector('.success-message');
+        const errorMsg = document.querySelector('.error-message');
+        
+        if (successMsg) {
+            setTimeout(function() {
+                successMsg.style.transition = 'opacity 0.5s';
+                successMsg.style.opacity = '0';
+                setTimeout(function() {
+                    successMsg.style.display = 'none';
+                }, 500);
+            }, 5000);
+        }
+        
+        if (errorMsg) {
+            setTimeout(function() {
+                errorMsg.style.transition = 'opacity 0.5s';
+                errorMsg.style.opacity = '0';
+                setTimeout(function() {
+                    errorMsg.style.display = 'none';
+                }, 500);
+            }, 5000);
+        }
+    };
 </script>
+
+<?php if ($showAddSuccess): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showSuccessModal();
+    });
+</script>
+<?php endif; ?>
+
+<?php if ($showError): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showErrorModal('<?php echo addslashes($errorMessage); ?>');
+    });
+</script>
+<?php endif; ?>
 
 </body>
 </html>
