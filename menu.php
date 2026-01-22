@@ -226,9 +226,11 @@
                                             <?php echo htmlspecialchars($item['menuDescription']); ?>
                                         </p>
 
-                                        <span class="price">
-                                            RM <?php echo number_format($item['menuPrice'], 2); ?>
-                                        </span>
+                                        <div class="item-footer">
+                                            <span class="price">
+                                                RM <?php echo number_format($item['menuPrice'], 2); ?>
+                                            </span>
+                                        </div>
                                     </div>
                                 </a>
                             </div>
@@ -345,6 +347,34 @@
                     categoryBar.classList.remove('sticky');
                 }
             });
+
+            function updateStockStatus() {
+                fetch('check_stock.php')
+                    .then(response => response.json())
+                    .then(outOfStockIDs => {
+                        document.querySelectorAll('.menu-item').forEach(item => {
+                            // Get ID from the link href (e.g., id=5)
+                            const link = item.querySelector('a').getAttribute('href');
+                            const id = parseInt(link.split('=')[1]);
+
+                            if (outOfStockIDs.includes(id)) {
+                                item.classList.add('out-of-stock-dim');
+                                item.style.pointerEvents = 'none'; // Disable click
+                                if(!item.querySelector('.sold-out-overlay')) {
+                                    item.insertAdjacentHTML('afterbegin', '<div class="sold-out-overlay"></div>');
+                                }
+                            } else {
+                                item.classList.remove('out-of-stock-dim');
+                                item.style.pointerEvents = 'auto';
+                                const overlay = item.querySelector('.sold-out-overlay');
+                                if(overlay) overlay.remove();
+                            }
+                        });
+                    });
+            }
+
+            // Run every 5 seconds
+            setInterval(updateStockStatus, 5000);
         </script>
     </body>
 </html>

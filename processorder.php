@@ -122,6 +122,25 @@ try {
         'message' => $e->getMessage()
     ]);
 }
+// Final Stock Check Before Completing Order
+$sql_check = "SELECT m.menuName 
+              FROM cart_menu cm 
+              JOIN menus m ON cm.menuID = m.menuID 
+              JOIN carts c ON cm.cart_ID = c.cart_ID
+              WHERE c.student_ID = ? AND (m.menuAvailability = 0 OR m.is_deleted = 1)";
 
+$stmt = $conn->prepare($sql_check);
+$stmt->bind_param("i", $student_id);
+$stmt->execute();
+$res_check = $stmt->get_result();
+
+if ($res_check->num_rows > 0) {
+    $row = $res_check->fetch_assoc();
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Order failed! ' . $row['menuName'] . ' is no longer available. Please remove it from your cart.'
+    ]);
+    exit();
+}
 $conn->close();
 ?>
