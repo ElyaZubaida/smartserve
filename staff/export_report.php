@@ -415,6 +415,20 @@ if ($chartEnabled && (count($chartLabels) === 0 || count($chartValues) === 0)) {
     $chartEnabled = false;
 }
 
+if ($chartEnabled && $chartType === 'bar' && count($chartLabels) > 5) {
+    $chartData = [];
+    $count = min(count($chartLabels), count($chartValues));
+    for ($i = 0; $i < $count; $i++) {
+        $chartData[] = ['label' => $chartLabels[$i], 'value' => (float)$chartValues[$i]];
+    }
+    usort($chartData, function ($a, $b) {
+        return $b['value'] <=> $a['value'];
+    });
+    $chartData = array_slice($chartData, 0, 5);
+    $chartLabels = array_column($chartData, 'label');
+    $chartValues = array_column($chartData, 'value');
+}
+
 mysqli_close($conn);
 
 $filtersHtml = implode(" &nbsp;|&nbsp; ", $filtersTextParts);
