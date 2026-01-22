@@ -4,6 +4,7 @@
  -->
 <?php
     session_start();
+    date_default_timezone_set('Asia/Kuala_Lumpur');
     include 'config/db_connect.php';
 
     // Check if user is logged in
@@ -43,7 +44,54 @@
         exit();
     }
 
-    $grand_total = $subtotal; // Add tax/service charge here if needed
+    $grand_total = $subtotal;
+
+    // Generate time slots (15-minute intervals)
+    function generateTimeSlots() {
+        $slots = [];
+
+        $now = new DateTime();
+
+        // Round UP to next 15-minute interval
+        $minutes = (int)$now->format('i');
+        $roundedMinutes = ceil($minutes / 15) * 15;
+
+        if ($roundedMinutes >= 60) {
+            $now->modify('+1 hour');
+            $roundedMinutes = 0;
+        }
+
+        $now->setTime((int)$now->format('H'), $roundedMinutes, 0);
+
+        // Business hours: 10:00 AM – 9:45 PM
+        $businessStart = new DateTime();
+        $businessStart->setTime(10, 0, 0);
+
+        $businessEnd = new DateTime();
+        $businessEnd->setTime(21, 45, 0);
+
+        // Decide start time
+        if ($now < $businessStart) {
+            $slotTime = clone $businessStart;
+        } elseif ($now > $businessEnd) {
+            return $slots; // No slots available
+        } else {
+            $slotTime = clone $now;
+        }
+
+        // Generate slots every 15 minutes
+        while ($slotTime <= $businessEnd) {
+            $slots[] = [
+                'value' => $slotTime->format('H:i:s'),
+                'display' => $slotTime->format('g:i A')
+            ];
+            $slotTime->modify('+15 minutes');
+        }
+
+        return $slots;
+    }
+
+    $timeSlots = generateTimeSlots();
 ?>
 
 <!DOCTYPE html>
@@ -84,72 +132,53 @@
 
             <div class="checkout-content">
                 <div class="order-summary-header">
-                <h3><span class="material-symbols-outlined">restaurant_menu</span> Your Selection</h3>
-            </div>
-            
-            <div class="order-items-list">
-                <?php foreach ($cart_items as $item): 
-                    // SAFE IMAGE PATH LOGIC
-                    $imgPath = $item['menuImage'];
-                    if (strpos($imgPath, 'img/') === false) { 
-                        $imgPath = 'img/' . $imgPath; 
-                    }
-                ?>
-                <div class="order-item-card">
-                    <div class="item-img-container">
-                        <img src="<?php echo htmlspecialchars($imgPath); ?>" 
-                             alt="<?php echo htmlspecialchars($item['menuName']); ?>">
-                    </div>
-                    <div class="item-info">
-                        <span class="item-name"><?php echo htmlspecialchars($item['menuName']); ?></span>
-                        <span class="item-price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
-                        
-                        <?php if (!empty($item['cm_request'])): ?>
-                            <span class="item-request">
-                                <span class="material-symbols-outlined">edit_note</span>
-                                <?php echo htmlspecialchars($item['cm_request']); ?>
-                            </span>
-                        <?php endif; ?>
-                    </div>
-                    <div class="item-qty-badge">x<?php echo $item['cm_quantity']; ?></div>
-                    <div class="item-subtotal">RM <?php echo number_format($item['cm_subtotal'], 2); ?></div>
+                    <h3><span class="material-symbols-outlined">restaurant_menu</span> Your Selection</h3>
                 </div>
-                <?php endforeach; ?>
-            </div>
+            
+                <div class="order-items-list">
+                    <?php foreach ($cart_items as $item): 
+                        // SAFE IMAGE PATH LOGIC
+                        $imgPath = $item['menuImage'];
+                        if (strpos($imgPath, 'img/') === false) { 
+                            $imgPath = 'img/' . $imgPath; 
+                        }
+                    ?>
+                    <div class="order-item-card">
+                        <div class="item-img-container">
+                            <img src="<?php echo htmlspecialchars($imgPath); ?>" 
+                                 alt="<?php echo htmlspecialchars($item['menuName']); ?>">
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name"><?php echo htmlspecialchars($item['menuName']); ?></span>
+                            <span class="item-price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
+                            
+                            <?php if (!empty($item['cm_request'])): ?>
+                                <span class="item-request">
+                                    <span class="material-symbols-outlined">edit_note</span>
+                                    <?php echo htmlspecialchars($item['cm_request']); ?>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="item-qty-badge">x<?php echo $item['cm_quantity']; ?></div>
+                        <div class="item-subtotal">RM <?php echo number_format($item['cm_subtotal'], 2); ?></div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
 
                 <div class="checkout-footer-card">
-                    <form action="processorder.php" method="POST" class="order-final-form">
+                    <form id="orderForm" method="POST" class="order-final-form">
                         <div class="pickup-box">
                             <div class="icon-label">
                                 <span class="material-symbols-outlined">schedule</span>
                                 <label>When will you pick this up?</label>
                             </div>
-                            <select name="pickup_time" class="pickup-select-styled" required>
-                                <option value="" disabled selected>Select a time slot</option>
-                                <option value="10:00:00">10.00 AM</option>
-                                <option value="10:30:00">10.30 AM</option>
-                                <option value="11:00:00">11.00 AM</option>
-                                <option value="11:30:00">11.30 AM</option>
-                                <option value="12:00:00">12.00 PM</option>
-                                <option value="12:30:00">12.30 PM</option>
-                                <option value="13:00:00">1.00 PM</option>
-                                <option value="13:30:00">1.30 PM</option>
-                                <option value="14:00:00">2.00 PM</option>
-                                <option value="14:30:00">2.30 PM</option>
-                                <option value="15:00:00">3.00 PM</option> 
-                                <option value="15:30:00">3.30 PM</option>
-                                <option value="16:00:00">4.00 PM</option>
-                                <option value="16:30:00">4.30 PM</option>
-                                <option value="17:00:00">5.00 PM</option>
-                                <option value="17:30:00">5.30 PM</option>
-                                <option value="18:00:00">6.00 PM</option>
-                                <option value="18:30:00">6.30 PM</option>
-                                <option value="19:00:00">7.00 PM</option>
-                                <option value="19:30:00">7.30 PM</option>
-                                <option value="20:00:00">8.00 PM</option>
-                                <option value="20:30:00">8.30 PM</option>
-                                <option value="21:00:00">9.00 PM</option>
-                                <option value="21:30:00">9.30 PM</option>
+                            <select name="pickup_time" class="pickup-select-styled">
+                                <option value="">Pick up immediately</option>
+                                <?php foreach ($timeSlots as $slot): ?>
+                                    <option value="<?php echo $slot['value']; ?>">
+                                        <?php echo $slot['display']; ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
 
@@ -162,7 +191,7 @@
                                 <span>Grand Total</span>
                                 <span>RM <?php echo number_format($grand_total, 2); ?></span>
                             </div>
-                            <button type="submit" class="place-order-confirm-btn">
+                            <button type="button" onclick="showConfirmModal()" class="place-order-confirm-btn">
                                 Confirm & Place Order <span class="material-symbols-outlined">arrow_forward</span>
                             </button>
                         </div>
@@ -170,5 +199,85 @@
                 </div>
             </div>
         </div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmModal" class="modal">
+            <div class="modal-content">
+                <span class="material-symbols-outlined modal-icon warning">info</span>
+                <h2>Confirm Order?</h2>
+                <p>Are you sure you want to place this order?</p>
+                <div class="modal-actions">
+                    <button class="modal-btn-cancel" onclick="closeConfirmModal()">Cancel</button>
+                    <button class="modal-btn-confirm" onclick="submitOrder()">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function showConfirmModal() {
+                document.getElementById('confirmModal').style.display = 'block';
+            }
+
+            function closeConfirmModal() {
+                document.getElementById('confirmModal').style.display = 'none';
+            }
+
+            function submitOrder() {
+                const form = document.getElementById('orderForm');
+                const formData = new FormData(form);
+
+                fetch('processorder.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    closeConfirmModal();
+                    if (data.success) {
+                        showResultModal('success', 'Order Placed!', data.message);
+                        setTimeout(() => {
+                            window.location.href = 'myorders.php';
+                        }, 2000);
+                    } else {
+                        showResultModal('error', 'Error', data.message);
+                    }
+                })
+                .catch(error => {
+                    closeConfirmModal();
+                    showResultModal('error', 'Error', 'Something went wrong. Please try again.');
+                });
+            }
+
+            function showResultModal(type, title, message) {
+                const modalHtml = `
+                    <div id="resultModal" class="modal" style="display: block;">
+                        <div class="modal-content">
+                            <span class="material-symbols-outlined modal-icon ${type}">
+                                ${type === 'success' ? 'check_circle' : 'error'}
+                            </span>
+                            <h2>${title}</h2>
+                            <p>${message}</p>
+                            <button class="modal-btn" onclick="closeResultModal()">OK</button>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+            }
+
+            function closeResultModal() {
+                const modal = document.getElementById('resultModal');
+                if (modal) {
+                    modal.remove();
+                }
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const confirmModal = document.getElementById('confirmModal');
+                if (event.target == confirmModal) {
+                    closeConfirmModal();
+                }
+            }
+        </script>
     </body>
 </html>
