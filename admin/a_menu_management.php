@@ -140,14 +140,18 @@ if (!$result) {
             if (mysqli_num_rows($result) > 0) {
                 // Loop through menu items
                 while ($menu_item = mysqli_fetch_assoc($result)) {
+                    $is_out_of_stock = (isset($menu_item['menuAvailability']) && (int)$menu_item['menuAvailability'] === 0);
             ?>
-            <div class="staff-menu-card">
+            <div class="staff-menu-card <?php echo $is_out_of_stock ? 'out-of-stock' : ''; ?>">
                 <div class="staff-menu-img">
                     <img src="<?php 
                         echo !empty($menu_item['menuImage']) 
                             ? '../img/' . htmlspecialchars($menu_item['menuImage']) 
                             : '../img/placeholder.jpg'; 
                     ?>" alt="<?php echo htmlspecialchars($menu_item['menuName']); ?>">
+                    <?php if ($is_out_of_stock): ?>
+                        <span class="stock-badge">Out of Stock</span>
+                    <?php endif; ?>
                 </div>
                 <div class="staff-menu-details">
                     <span class="staff-menu-category">
