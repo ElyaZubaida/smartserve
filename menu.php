@@ -226,9 +226,11 @@
                                             <?php echo htmlspecialchars($item['menuDescription']); ?>
                                         </p>
 
-                                        <span class="price">
-                                            RM <?php echo number_format($item['menuPrice'], 2); ?>
-                                        </span>
+                                        <div class="item-footer">
+                                            <span class="price">
+                                                RM <?php echo number_format($item['menuPrice'], 2); ?>
+                                            </span>
+                                        </div>
                                     </div>
                                 </a>
                             </div>

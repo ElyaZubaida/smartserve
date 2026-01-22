@@ -107,9 +107,13 @@
 
         <!-- Menu Details Section -->
         <div class="details-container">
-            <div class="orders-title">
+            <div class="section-header-box">
+            <div class="header-title-group">
+                <span class="material-symbols-outlined pulse-icon">restaurant_menu</span>
                 <h1>Menu Details</h1>
             </div>
+            <p>View detailed information about this menu item.</p>
+        </div>
             
             <section class="menu-details-card">
                 
@@ -119,8 +123,8 @@
 
                 <div class="details-info-section">
                     <div class="food-header">
-                        <h1><?php echo htmlspecialchars($menu_item['menuName']); ?></h1>
                         <span class="food-price-tag">RM <?php echo number_format($menu_item['menuPrice'], 2); ?></span>
+                        <h1><?php echo htmlspecialchars($menu_item['menuName']); ?></h1>
                     </div>
                     
                     <p class="food-desc">

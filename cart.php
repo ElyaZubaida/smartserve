@@ -19,13 +19,17 @@
         $new_qty = intval($_POST['quantity']);
         $request = isset($_POST['special_request']) ? trim($_POST['special_request']) : '';
         
-        // --- START STOCK PROTECTION ADDITION ---
-        $check_stock = $conn->prepare("SELECT menuName, menuAvailability, menuPrice FROM menus WHERE menuID = ?");
+        // --- UPDATED STOCK & DELETION PROTECTION ---
+        // Added is_deleted check here
+        $check_stock = $conn->prepare("SELECT menuName, menuAvailability, is_deleted, menuPrice FROM menus WHERE menuID = ?");
         $check_stock->bind_param("i", $menu_id);
         $check_stock->execute();
         $stock = $check_stock->get_result()->fetch_assoc();
 
-        if ($stock['menuAvailability'] == 0) {
+        if (!$stock || $stock['is_deleted'] == 1) {
+            $message = 'This item is no longer available on our menu.';
+            $message_type = 'error';
+        } elseif ($stock['menuAvailability'] == 0) {
             $message = 'Unable to update: ' . $stock['menuName'] . ' is currently out of stock.';
             $message_type = 'error';
         } elseif ($new_qty > 0) {
@@ -36,7 +40,7 @@
             $stmt->bind_param("idssi", $new_qty, $new_subtotal, $request, $cart_id, $menu_id);
             
             if ($stmt->execute()) {
-                $update_total = "UPDATE carts SET cart_totalPrice = (SELECT SUM(cm_subtotal) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
+                $update_total = "UPDATE carts SET cart_totalPrice = (SELECT IFNULL(SUM(cm_subtotal), 0) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
                 $stmt = $conn->prepare($update_total);
                 $stmt->bind_param("ii", $cart_id, $cart_id);
                 $stmt->execute();
@@ -48,7 +52,6 @@
                 $message_type = 'error';
             }
         }
-        // --- END STOCK PROTECTION ADDITION ---
     } 
 
     // Handle item removal
@@ -96,9 +99,9 @@
         }
     }
 
-    // Fetch cart items including availability
+    // Fetch cart items including is_deleted status
     $cart_query = "SELECT carts.cart_ID, cart_menu.cm_quantity, cart_menu.menuID, cart_menu.cm_request,
-                          menus.menuName, menus.menuPrice, menus.menuImage, menus.menuAvailability
+                          menus.menuName, menus.menuPrice, menus.menuImage, menus.menuAvailability, menus.is_deleted
                    FROM carts
                    JOIN cart_menu ON carts.cart_ID = cart_menu.cart_ID
                    JOIN menus ON cart_menu.menuID = menus.menuID
@@ -111,12 +114,18 @@
     $total = 0;
     $items_array = [];
     $cart_id_for_clear = null;
-    $has_out_of_stock = false; // Flag for checkout button
+    $has_invalid_items = false; 
 
     while ($item = $cart_items->fetch_assoc()) {
-        $total += $item['menuPrice'] * $item['cm_quantity'];
         $items_array[] = $item;
-        if ($item['menuAvailability'] == 0) $has_out_of_stock = true;
+        
+        // Sum total only for valid items
+        if ($item['menuAvailability'] == 1 && $item['is_deleted'] == 0) {
+            $total += $item['menuPrice'] * $item['cm_quantity'];
+        } else {
+            $has_invalid_items = true;
+        }
+
         if ($cart_id_for_clear === null) {
             $cart_id_for_clear = $item['cart_ID'];
         }
@@ -176,13 +185,16 @@
                         $imgPath = $item['menuImage'];
                         if (strpos($imgPath, 'img/') === false) { $imgPath = 'img/' . $imgPath; }
                         $is_out_of_stock = ($item['menuAvailability'] == 0);
+                        $is_deleted = ($item['is_deleted'] == 1);
                     ?>
-                        <div class="cart-card <?php echo $is_out_of_stock ? 'out-of-stock-dim' : ''; ?>">
+                        <div class="cart-card <?php echo ($is_out_of_stock || $is_deleted) ? 'out-of-stock-dim' : ''; ?>">
                             <div class="cart-card-img">  
                                 <img src="<?php echo htmlspecialchars($imgPath); ?>" 
                                      onerror="this.src='img/default_food.png'" 
                                      alt="<?php echo htmlspecialchars($item['menuName']); ?>">  
-                                <?php if($is_out_of_stock): ?>
+                                <?php if($is_deleted): ?>
+                                    <div class="sold-out-tag" style="background: #555;">UNAVAILABLE</div>
+                                <?php elseif($is_out_of_stock): ?>
                                     <div class="sold-out-tag">SOLD OUT</div>
                                 <?php endif; ?>
                             </div>
@@ -198,7 +210,7 @@
                                             <input type="text" name="special_request" 
                                                 placeholder="Special request..." 
                                                 value="<?php echo htmlspecialchars($item['cm_request']); ?>" 
-                                                class="cart-request-input">
+                                                class="cart-request-input" <?php echo ($is_deleted || $is_out_of_stock) ? 'disabled' : ''; ?>>
                                         </div>
 
                                         <div class="qty-selector">
@@ -209,11 +221,11 @@
                                                 value="<?php echo $item['cm_quantity']; ?>" 
                                                 min="1" 
                                                 max="99"
-                                                style="width: 60px; height: 36px;">
+                                                style="width: 60px; height: 36px;" <?php echo ($is_deleted || $is_out_of_stock) ? 'disabled' : ''; ?>>
 
                                             <input type="hidden" name="cart_id" value="<?php echo $item['cart_ID']; ?>">
                                             <input type="hidden" name="menu_id" value="<?php echo $item['menuID']; ?>">
-                                            <button type="submit" name="update_qty" class="btn-update-qty" style="height: 36px;">Update</button>
+                                            <button type="submit" name="update_qty" class="btn-update-qty" style="height: 36px;" <?php echo ($is_deleted || $is_out_of_stock) ? 'disabled' : ''; ?>>Update</button>
                                         </div>
                                     </form>
 
@@ -251,9 +263,9 @@
                             <span>RM <?php echo number_format($total, 2); ?></span>
                         </div>
                     </div>
-                    <?php if($has_out_of_stock): ?>
+                    <?php if($has_invalid_items): ?>
                         <p style="color: #d32f2f; font-size: 0.85rem; margin-top: 10px; font-weight: bold;">
-                            Some items are out of stock. Please remove them to proceed.
+                            Some items are no longer available. Please remove them to proceed.
                         </p>
                         <button class="place-order-btn-full" style="background: #ccc; cursor: not-allowed;" disabled>Checkout Locked</button>
                     <?php else: ?>

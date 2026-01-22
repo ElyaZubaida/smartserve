@@ -1,10 +1,11 @@
 <?php
 include 'config/db_connect.php';
-$query = "SELECT menuID FROM menus WHERE menuAvailability = 0 AND is_deleted = 0";
+// Updated Query: Check for BOTH availability = 0 OR is_deleted = 1
+$query = "SELECT menuID FROM menus WHERE (menuAvailability = 0 OR is_deleted = 1)";
 $result = $conn->query($query);
-$outOfStockIDs = [];
+$unavailableIDs = [];
 while($row = $result->fetch_assoc()) {
-    $outOfStockIDs[] = (int)$row['menuID'];
+    $unavailableIDs[] = (int)$row['menuID'];
 }
-echo json_encode($outOfStockIDs);
+echo json_encode($unavailableIDs);
 ?>
