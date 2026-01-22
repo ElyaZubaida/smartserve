@@ -2,7 +2,6 @@
  Frontend: Elya 
  Backend: Amirah 
  -->
-
 <?php
 session_start();
 
@@ -30,6 +29,7 @@ $query = "
 ";
 
 $result = mysqli_query($conn, $query);
+
 
 // Check if query was successful
 if (!$result) {

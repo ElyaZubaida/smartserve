@@ -45,7 +45,7 @@
         }
         header("Location: cart.php");
         exit();
-    }
+    } 
 
     // Handle item removal
     if (isset($_POST['remove_item'])) {
@@ -132,16 +132,19 @@
             <section class="cart-layout">
                 <div class="cart-items-wrapper">
                     <?php if (count($items_array) > 0): ?>
-                        <?php foreach ($items_array as $index => $item): ?>
-                            <div class="cart-card">
-                                <div class="cart-card-img">
-                                    <img src="<?php echo htmlspecialchars($item['menuImage']); ?>" 
-                                        alt="<?php echo htmlspecialchars($item['menuName']); ?>">
-                                </div>
-                                <div class="cart-card-info">
-                                    <div class="info-top">
-                                        <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
-                                        <p class="price-tag">RM <?php echo number_format($item['menuPrice'], 2); ?></p>
+                    <?php foreach ($items_array as $index => $item): 
+                        $imgPath = $item['menuImage'];
+                        if (strpos($imgPath, 'img/') === false) { $imgPath = 'img/' . $imgPath; }
+                    ?>
+                        <div class="cart-card">
+                            <div class="cart-card-img">  
+                                <img src="<?php echo htmlspecialchars($imgPath); ?>" 
+                                     alt="<?php echo htmlspecialchars($item['menuName']); ?>">  
+                            </div>
+                            <div class="cart-card-info">
+                                <div class="info-top">
+                                    <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
+                                    <p class="price-tag">RM <?php echo number_format($item['menuPrice'], 2); ?></p>
                                     </div>
 
                                     <p class="special-request">

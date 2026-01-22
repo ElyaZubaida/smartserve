@@ -81,8 +81,8 @@
                                 <div class="status-badge <?php echo $status_class; ?>">
                                     <?php
                                         switch ($status_class) {
-                                            case 'pending': echo '<span class="material-symbols-outlined">restaurant</span>'; break;
-                                            case 'preparing': echo '<span class="material-symbols-outlined">kitchen</span>'; break;
+                                            case 'pending': echo '<span class="material-symbols-outlined">check_circle</span>'; break;
+                                            case 'preparing': echo '<span class="material-symbols-outlined">restaurant</span>'; break;
                                             case 'ready': echo '<span class="material-symbols-outlined">shopping_bag</span>'; break;
                                             case 'completed': echo '<span class="material-symbols-outlined">task_alt</span>'; break;
                                         }

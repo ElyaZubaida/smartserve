@@ -84,31 +84,38 @@
 
             <div class="checkout-content">
                 <div class="order-summary-header">
-                    <h3><span class="material-symbols-outlined">restaurant_menu</span> Your Selection</h3>
-                </div>
-                
-                <div class="order-items-list">
-                    <?php foreach ($cart_items as $item): ?>
-                    <div class="order-item-card">
-                        <div class="item-img-container">
-                            <img src="<?php echo htmlspecialchars($item['menuImage']); ?>" 
-                                alt="<?php echo htmlspecialchars($item['menuName']); ?>">
-                        </div>
-                        <div class="item-info">
-                            <span class="item-name"><?php echo htmlspecialchars($item['menuName']); ?></span>
-                            <span class="item-price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
-                            <?php if (!empty($item['request'])): ?>
-                                <span class="item-request">
-                                    <span class="material-symbols-outlined">edit_note</span>
-                                    <?php echo htmlspecialchars($item['request']); ?>
-                                </span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="item-qty-badge">x<?php echo $item['cm_quantity']; ?></div>
-                        <div class="item-subtotal">RM <?php echo number_format($item['cm_subtotal'], 2); ?></div>
+                <h3><span class="material-symbols-outlined">restaurant_menu</span> Your Selection</h3>
+            </div>
+            
+            <div class="order-items-list">
+                <?php foreach ($cart_items as $item): 
+                    // SAFE IMAGE PATH LOGIC
+                    $imgPath = $item['menuImage'];
+                    if (strpos($imgPath, 'img/') === false) { 
+                        $imgPath = 'img/' . $imgPath; 
+                    }
+                ?>
+                <div class="order-item-card">
+                    <div class="item-img-container">
+                        <img src="<?php echo htmlspecialchars($imgPath); ?>" 
+                             alt="<?php echo htmlspecialchars($item['menuName']); ?>">
                     </div>
-                    <?php endforeach; ?>
+                    <div class="item-info">
+                        <span class="item-name"><?php echo htmlspecialchars($item['menuName']); ?></span>
+                        <span class="item-price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
+                        
+                        <?php if (!empty($item['cm_request'])): ?>
+                            <span class="item-request">
+                                <span class="material-symbols-outlined">edit_note</span>
+                                <?php echo htmlspecialchars($item['cm_request']); ?>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="item-qty-badge">x<?php echo $item['cm_quantity']; ?></div>
+                    <div class="item-subtotal">RM <?php echo number_format($item['cm_subtotal'], 2); ?></div>
                 </div>
+                <?php endforeach; ?>
+            </div>
 
                 <div class="checkout-footer-card">
                     <form action="processorder.php" method="POST" class="order-final-form">
