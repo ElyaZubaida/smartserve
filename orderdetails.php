@@ -5,6 +5,7 @@
 
 <?php
     session_start();
+    date_default_timezone_set('Asia/Kuala_Lumpur');
     include 'config/db_connect.php';
 
     // Check if user is logged in
@@ -54,6 +55,25 @@
     $pickup_time = date('h:i A', strtotime($order['pickup_time']));
     $order_date = date('d/m/Y', strtotime($order['order_date']));
 
+    // Format completed time (if order is completed)
+    $completed_datetime = null;
+    if (
+        strtolower(trim($order['order_status'])) === 'completed'
+        && !empty($order['completed_date'])
+    ) {
+        $completed_datetime = date(
+            'd/m/Y, h:i A',
+            strtotime($order['completed_date'])
+        );
+    }
+
+    // Handle pickup time (optional)
+    if (!empty($order['pickup_time'])) {
+        $pickup_time_display = date('h:i A', strtotime($order['pickup_time']));
+    } else {
+        $pickup_time_display = 'Immediately after ready';
+    }
+
     // Map order status to CSS class
     $status_class = strtolower($order['order_status']); // e.g., pending, preparing, ready, completed
 ?>
@@ -100,6 +120,12 @@
                     <div class="header-left">
                         <h1>Order #<?php echo htmlspecialchars($order['order_ID']); ?></h1>
                         <p>Placed on: <?php echo $order_date; ?></p>
+
+                        <?php if ($completed_datetime): ?>
+                            <p class="completed-info">
+                                Completed on: <?php echo $completed_datetime; ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
                     <div class="status-badge <?php echo $status_class; ?>">
                         <?php echo htmlspecialchars($order['order_status']); ?>
@@ -151,7 +177,7 @@
                             <span class="material-symbols-outlined">schedule</span>
                             <div>
                                 <strong>Pickup Time</strong>
-                                <p><?php echo $pickup_time; ?></p>
+                                <p><?php echo $pickup_time_display; ?></p>
                             </div>
                         </div>
                         <div class="info-row">

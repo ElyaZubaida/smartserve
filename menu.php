@@ -18,7 +18,7 @@
     $student_id = $_SESSION['student_id'];
 
     //fetch all menu items grouped by category
-    $menu_query = "SELECT menuID, menuName, menuPrice, menuImage, menuCategory FROM menus ORDER BY menuCategory, menuName";
+    $menu_query = "SELECT menuID, menuName, menuPrice, menuImage, menuCategory, menuAvailability FROM menus ORDER BY menuCategory, menuName";
     $menu_result = $conn->query($menu_query);
 
     //group menu items by category
@@ -160,7 +160,7 @@
                     
                     <div class="menu-grid">
                         <?php foreach ($menu_by_category[$cat] as $item): ?>
-                            <div class="menu-item">
+                            <div class="menu-item <?php echo ($item['menuAvailability'] == 0) ? 'unavailable' : ''; ?>">
                                 <a href="menudetails.php?id=<?php echo $item['menuID']; ?>" class="item-link">
                                     <img src="img/<?php echo htmlspecialchars($item['menuImage']); ?>" 
                                         onerror="this.src='img/default_food.png'" 
@@ -179,6 +179,11 @@
             endforeach; 
             ?>
         </main>
+
+        <!-- Back to Top Button -->
+        <button id="backToTop" onclick="scrollToTop()">
+            <span class="material-symbols-outlined">arrow_upward</span>
+        </button>
 
         <script>
             function scrollToCategory(category) 
@@ -247,6 +252,26 @@
                     }
                 });
             });
+
+            // Back to Top Button Functionality
+            const backToTopBtn = document.getElementById('backToTop');
+
+            // Show/hide button based on scroll position
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.style.display = 'flex';
+                } else {
+                    backToTopBtn.style.display = 'none';
+                }
+            });
+
+            // Scroll to top function
+            function scrollToTop() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
         </script>
     </body>
 </html>

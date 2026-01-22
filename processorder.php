@@ -1,110 +1,127 @@
 <?php
-// processorder.php
-
 session_start();
 include 'config/db_connect.php';
 
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+header('Content-Type: application/json');
 
 // Check if user is logged in
 if (!isset($_SESSION['student_id'])) {
-    header('Location: login.php');
-    exit();
-}
-
-// Check if form was submitted and pickup_time is set
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['pickup_time'])) {
-    $_SESSION['error_message'] = "Please select a pickup time.";
-    header('Location: placeorder.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Please login first'
+    ]);
     exit();
 }
 
 $student_id = $_SESSION['student_id'];
-$pickup_time = $_POST['pickup_time']; // e.g., "15:30:00"
-
-// Start transaction
-$conn->begin_transaction();
 
 try {
-    //Get cart items
-    $query = "SELECT c.cart_ID, cm.menuID, cm.cm_quantity, cm.cm_subtotal, cm.cm_request
-              FROM carts c
-              JOIN cart_menu cm ON c.cart_ID = cm.cart_ID
-              WHERE c.student_ID = ?";
-    $stmt = $conn->prepare($query);
-    if (!$stmt) throw new Exception($conn->error);
+    // Get pickup time (optional)
+    $pickup_time = isset($_POST['pickup_time']) && !empty($_POST['pickup_time']) 
+                   ? $_POST['pickup_time'] 
+                   : null;
+
+    // Start transaction
+    $conn->begin_transaction();
+
+    // Get cart items
+    $cart_query = "SELECT cm.cart_ID, cm.menuID, cm.cm_quantity, cm.cm_subtotal, cm.cm_request
+                   FROM carts c
+                   JOIN cart_menu cm ON c.cart_ID = cm.cart_ID
+                   WHERE c.student_ID = ?";
+    
+    $stmt = $conn->prepare($cart_query);
     $stmt->bind_param("i", $student_id);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $cart_result = $stmt->get_result();
 
-    $cart_items = [];
+    if ($cart_result->num_rows === 0) {
+        throw new Exception('Your cart is empty');
+    }
+
+    // Calculate total amount
     $total_amount = 0;
-
-    while ($row = $result->fetch_assoc()) {
-        $cart_items[] = $row;
-        $total_amount += (float) $row['cm_subtotal'];
+    $cart_items = [];
+    
+    while ($item = $cart_result->fetch_assoc()) {
+        $total_amount += $item['cm_subtotal'];
+        $cart_items[] = $item;
     }
 
-    //Check if cart is empty
-    if (empty($cart_items)) {
-        throw new Exception("Your cart is empty.");
+    // Prepare pickup_time for database
+    $pickup_datetime = null;
+    if ($pickup_time) {
+        $today = date('Y-m-d');
+        $pickup_datetime = $today . ' ' . $pickup_time;
     }
 
-    // Prepare pickup datetime
-    $pickup_datetime = date('Y-m-d') . ' ' . $pickup_time; 
-
-    //Insert into orders table
-    $insert_order = "INSERT INTO orders (student_ID, order_date, pickup_time, order_status, order_totalAmount, order_amountPaid)
-                     VALUES (?, NOW(), ?, 'Pending', ?, 0.00)";
-    $stmt = $conn->prepare($insert_order);
-    if (!$stmt) throw new Exception($conn->error);
+    // Create order
+    $order_query = "INSERT INTO orders (student_ID, order_date, pickup_time, order_status, order_totalAmount, order_amountPaid, created_at, updated_at) 
+                    VALUES (?, NOW(), ?, 'Pending', ?, 0.00, NOW(), NOW())";
+    
+    $stmt = $conn->prepare($order_query);
     $stmt->bind_param("isd", $student_id, $pickup_datetime, $total_amount);
-    if (!$stmt->execute()) throw new Exception($stmt->error);
+    
+    if (!$stmt->execute()) {
+        throw new Exception('Failed to create order');
+    }
 
     $order_id = $conn->insert_id;
 
-    //Insert each cart item into order_menu
-    $insert_item = "INSERT INTO order_menu (order_ID, menuID, om_quantity, om_subtotal, request)
-                    VALUES (?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($insert_item);
-    if (!$stmt) throw new Exception($conn->error);
-
+    // Insert order items
     foreach ($cart_items as $item) {
-        $stmt->bind_param(
-            "iiids",
-            $order_id,
-            $item['menuID'],
-            $item['cm_quantity'],
+        $order_menu_query = "INSERT INTO order_menu (order_ID, menuID, om_quantity, om_subtotal, request) 
+                            VALUES (?, ?, ?, ?, ?)";
+        
+        $stmt = $conn->prepare($order_menu_query);
+        $stmt->bind_param("iiids", 
+            $order_id, 
+            $item['menuID'], 
+            $item['cm_quantity'], 
             $item['cm_subtotal'],
-            $item['cm_request'] 
+            $item['cm_request']
         );
-        if (!$stmt->execute()) throw new Exception($stmt->error);
+        
+        if (!$stmt->execute()) {
+            throw new Exception('Failed to add items to order');
+        }
     }
 
-    //Clear cart_menu items for this student
-    $delete_cart_menu = "DELETE cm FROM cart_menu cm
-                         JOIN carts c ON cm.cart_ID = c.cart_ID
-                         WHERE c.student_ID = ?";
-    $stmt = $conn->prepare($delete_cart_menu);
-    if (!$stmt) throw new Exception($conn->error);
-    $stmt->bind_param("i", $student_id);
-    if (!$stmt->execute()) throw new Exception($stmt->error);
+    // Clear cart
+    $cart_id = $cart_items[0]['cart_ID'];
+    
+    // Delete cart items
+    $delete_cart_items = "DELETE FROM cart_menu WHERE cart_ID = ?";
+    $stmt = $conn->prepare($delete_cart_items);
+    $stmt->bind_param("i", $cart_id);
+    $stmt->execute();
 
+    // Update cart total
+    $update_cart = "UPDATE carts SET cart_totalPrice = 0.00 WHERE cart_ID = ?";
+    $stmt = $conn->prepare($update_cart);
+    $stmt->bind_param("i", $cart_id);
+    $stmt->execute();
+
+    // Commit transaction
     $conn->commit();
 
-    // Redirect to order details page
-    header("Location: orderdetails.php?order_id=" . $order_id);
-    exit();
+    $pickup_message = $pickup_time 
+        ? "scheduled for pickup at " . date('g:i A', strtotime($pickup_time))
+        : "ready for immediate pickup";
+
+    echo json_encode([
+        'success' => true,
+        'message' => "Order #$order_id placed successfully and $pickup_message!",
+        'order_id' => $order_id
+    ]);
 
 } catch (Exception $e) {
-    // Rollback transaction on error
     $conn->rollback();
-
-    $_SESSION['error_message'] = "Failed to place order: " . $e->getMessage();
-    header('Location: cart.php');
-    exit();
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }
+
+$conn->close();
 ?>

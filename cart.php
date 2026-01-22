@@ -13,6 +13,8 @@
     }
 
     $student_id = $_SESSION['student_id'];
+    $message = '';
+    $message_type = '';
 
     // Handle quantity update
     if (isset($_POST['update_qty'])) {
@@ -35,16 +37,21 @@
             $update = "UPDATE cart_menu SET cm_quantity = ?, cm_subtotal = ?, cm_request = ? WHERE cart_ID = ? AND menuID = ?";
             $stmt = $conn->prepare($update);
             $stmt->bind_param("idssi", $new_qty, $new_subtotal, $request, $cart_id, $menu_id);
-            $stmt->execute();
             
-            // Update cart total
-            $update_total = "UPDATE carts SET cart_totalPrice = (SELECT SUM(cm_subtotal) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
-            $stmt = $conn->prepare($update_total);
-            $stmt->bind_param("ii", $cart_id, $cart_id);
-            $stmt->execute();
+            if ($stmt->execute()) {
+                // Update cart total
+                $update_total = "UPDATE carts SET cart_totalPrice = (SELECT SUM(cm_subtotal) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
+                $stmt = $conn->prepare($update_total);
+                $stmt->bind_param("ii", $cart_id, $cart_id);
+                $stmt->execute();
+                
+                $message = 'Item updated successfully!';
+                $message_type = 'success';
+            } else {
+                $message = 'Failed to update item.';
+                $message_type = 'error';
+            }
         }
-        header("Location: cart.php");
-        exit();
     } 
 
     // Handle item removal
@@ -56,16 +63,44 @@
         $delete = "DELETE FROM cart_menu WHERE cart_ID = ? AND menuID = ?";
         $stmt = $conn->prepare($delete);
         $stmt->bind_param("ii", $cart_id, $menu_id);
-        $stmt->execute();
         
-        // Update cart total
-        $update_total = "UPDATE carts SET cart_totalPrice = (SELECT IFNULL(SUM(cm_subtotal), 0) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
-        $stmt = $conn->prepare($update_total);
-        $stmt->bind_param("ii", $cart_id, $cart_id);
-        $stmt->execute();
+        if ($stmt->execute()) {
+            // Update cart total
+            $update_total = "UPDATE carts SET cart_totalPrice = (SELECT IFNULL(SUM(cm_subtotal), 0) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
+            $stmt = $conn->prepare($update_total);
+            $stmt->bind_param("ii", $cart_id, $cart_id);
+            $stmt->execute();
+            
+            $message = 'Item removed from cart.';
+            $message_type = 'success';
+        } else {
+            $message = 'Failed to remove item.';
+            $message_type = 'error';
+        }
+    }
+
+    // Handle clear cart
+    if (isset($_POST['clear_cart'])) {
+        $cart_id = intval($_POST['cart_id']);
         
-        header("Location: cart.php");
-        exit();
+        // Delete all items from cart_menu
+        $delete_all = "DELETE FROM cart_menu WHERE cart_ID = ?";
+        $stmt = $conn->prepare($delete_all);
+        $stmt->bind_param("i", $cart_id);
+        
+        if ($stmt->execute()) {
+            // Update cart total to 0
+            $update_total = "UPDATE carts SET cart_totalPrice = 0 WHERE cart_ID = ?";
+            $stmt = $conn->prepare($update_total);
+            $stmt->bind_param("i", $cart_id);
+            $stmt->execute();
+            
+            $message = 'Cart cleared successfully!';
+            $message_type = 'success';
+        } else {
+            $message = 'Failed to clear cart.';
+            $message_type = 'error';
+        }
     }
 
     // Fetch cart items including request
@@ -83,9 +118,13 @@
     // Calculate total
     $total = 0;
     $items_array = [];
+    $cart_id_for_clear = null;
     while ($item = $cart_items->fetch_assoc()) {
         $total += $item['menuPrice'] * $item['cm_quantity'];
         $items_array[] = $item;
+        if ($cart_id_for_clear === null) {
+            $cart_id_for_clear = $item['cart_ID'];
+        }
     }
 ?>
 
@@ -129,6 +168,14 @@
                 </a>
             </div>
 
+            <?php if (count($items_array) > 0): ?>
+            <div style="text-align: right; margin-bottom: 20px;">
+                <button class="btn-clear-cart" onclick="showClearCartModal()">
+                    <span class="material-symbols-outlined">delete_sweep</span> Clear Cart
+                </button>
+            </div>
+            <?php endif; ?>
+
             <section class="cart-layout">
                 <div class="cart-items-wrapper">
                     <?php if (count($items_array) > 0): ?>
@@ -145,50 +192,40 @@
                                 <div class="info-top">
                                     <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
                                     <p class="price-tag">RM <?php echo number_format($item['menuPrice'], 2); ?></p>
-                                    </div>
+                                </div>
 
-                                    <p class="special-request">
-                                        <?php if (!empty($item['request'])): ?>
-                                            <strong>Request:</strong> <?php echo htmlspecialchars($item['request']); ?>
-                                        <?php endif; ?>
-                                    </p>
+                                <div class="cart-card-actions">
+                                    <form method="POST" class="qty-form" id="form-<?php echo $index; ?>">
+                                        <div class="special-request-input">
+                                            <input type="text" name="special_request" 
+                                                placeholder="Special request..." 
+                                                value="<?php echo htmlspecialchars($item['cm_request']); ?>" 
+                                                class="cart-request-input">
+                                        </div>
 
-                                    <div class="cart-card-actions">
-                                        <form method="POST" class="qty-form" id="form-<?php echo $index; ?>">
-                                            <div class="special-request-input">
-                                                <input type="text" name="special_request" 
-                                                    placeholder="Special request..." 
-                                                    value="<?php echo htmlspecialchars($item['cm_request']); ?>" 
-                                                    style="width: 100%; padding: 6px; margin-bottom: 8px;">
-                                            </div>
+                                        <div class="qty-selector">
+                                            <label>Qty:</label>
+                                            <input type="number" 
+                                                id="quantity-<?php echo $index; ?>"
+                                                name="quantity" 
+                                                value="<?php echo $item['cm_quantity']; ?>" 
+                                                min="1" 
+                                                max="99"
+                                                style="width: 60px; height: 36px;">
 
-                                            <div class="qty-selector">
-                                                <label>Qty:</label>
-                                                <input type="number" 
-                                                    id="quantity-<?php echo $index; ?>"
-                                                    name="quantity" 
-                                                    value="<?php echo $item['cm_quantity']; ?>" 
-                                                    min="1" 
-                                                    max="99">
-
-                                                <input type="hidden" name="cart_id" value="<?php echo $item['cart_ID']; ?>">
-                                                <input type="hidden" name="menu_id" value="<?php echo $item['menuID']; ?>">
-                                                <button type="submit" name="update_qty" class="btn-update-qty">Update</button>
-                                            </div>
-                                        </form>
-
-                                        <form method="POST" style="display: inline;">
                                             <input type="hidden" name="cart_id" value="<?php echo $item['cart_ID']; ?>">
                                             <input type="hidden" name="menu_id" value="<?php echo $item['menuID']; ?>">
-                                            <button type="submit" name="remove_item" class="text-remove-btn" 
-                                                    onclick="return confirm('Remove this item from cart?')">
-                                                <span class="material-symbols-outlined">delete_outline</span> Remove
-                                            </button>
-                                        </form>
-                                    </div>
+                                            <button type="submit" name="update_qty" class="btn-update-qty" style="height: 36px;">Update</button>
+                                        </div>
+                                    </form>
+
+                                    <button type="button" class="text-remove-btn" onclick="showRemoveModal(<?php echo $item['cart_ID']; ?>, <?php echo $item['menuID']; ?>)">
+                                        <span class="material-symbols-outlined">delete_outline</span> Remove
+                                    </button>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
+                        </div>
+                    <?php endforeach; ?>
                     <?php else: ?>
                         <div class="empty-state">
                             <span class="material-symbols-outlined">shopping_cart</span>
@@ -221,6 +258,124 @@
                 <?php endif; ?>
             </section>
         </div>
+
+        <!-- Success/Error Modal -->
+        <div id="messageModal" class="modal">
+            <div class="modal-content">
+                <span class="material-symbols-outlined modal-icon <?php echo $message_type; ?>">
+                    <?php echo $message_type === 'success' ? 'check_circle' : 'error'; ?>
+                </span>
+                <h2><?php echo $message_type === 'success' ? 'Success!' : 'Error'; ?></h2>
+                <p id="modalMessage"><?php echo htmlspecialchars($message); ?></p>
+                <button class="modal-btn" onclick="closeModal()">OK</button>
+            </div>
+        </div>
+
+        <!-- Remove Item Confirmation Modal -->
+        <div id="removeModal" class="modal">
+            <div class="modal-content">
+                <span class="material-symbols-outlined modal-icon error">warning</span>
+                <h2>Remove Item?</h2>
+                <p>Are you sure you want to remove this item from your cart?</p>
+                <div class="modal-actions">
+                    <button class="modal-btn-cancel" onclick="closeRemoveModal()">Cancel</button>
+                    <button class="modal-btn-confirm" onclick="confirmRemoveAction()">Remove</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clear Cart Confirmation Modal -->
+        <div id="clearCartModal" class="modal">
+            <div class="modal-content">
+                <span class="material-symbols-outlined modal-icon error">delete_sweep</span>
+                <h2>Clear Cart?</h2>
+                <p>Are you sure you want to remove all items from your cart?</p>
+                <div class="modal-actions">
+                    <button class="modal-btn-cancel" onclick="closeClearCartModal()">Cancel</button>
+                    <button class="modal-btn-confirm" onclick="confirmClearCart()">Clear All</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden form for clear cart -->
+        <form id="clearCartForm" method="POST" style="display: none;">
+            <input type="hidden" name="cart_id" value="<?php echo $cart_id_for_clear; ?>">
+            <input type="hidden" name="clear_cart" value="1">
+        </form>
+
+        <!-- Hidden form for remove item -->
+        <form id="removeItemForm" method="POST" style="display: none;">
+            <input type="hidden" name="cart_id" id="remove_cart_id">
+            <input type="hidden" name="menu_id" id="remove_menu_id">
+            <input type="hidden" name="remove_item" value="1">
+        </form>
+
+        <script>
+            // Show message modal if there's a message
+            <?php if (!empty($message)): ?>
+            window.onload = function() {
+                document.getElementById('messageModal').style.display = 'block';
+            };
+            <?php endif; ?>
+
+            function closeModal() {
+                document.getElementById('messageModal').style.display = 'none';
+            }
+
+            // Remove item confirmation
+            let pendingCartId = null;
+            let pendingMenuId = null;
+
+            function showRemoveModal(cartId, menuId) {
+                pendingCartId = cartId;
+                pendingMenuId = menuId;
+                document.getElementById('removeModal').style.display = 'block';
+            }
+
+            function closeRemoveModal() {
+                document.getElementById('removeModal').style.display = 'none';
+                pendingCartId = null;
+                pendingMenuId = null;
+            }
+
+            function confirmRemoveAction() {
+                if (pendingCartId && pendingMenuId) {
+                    document.getElementById('remove_cart_id').value = pendingCartId;
+                    document.getElementById('remove_menu_id').value = pendingMenuId;
+                    document.getElementById('removeItemForm').submit();
+                }
+            }
+
+            // Clear cart confirmation
+            function showClearCartModal() {
+                document.getElementById('clearCartModal').style.display = 'block';
+            }
+
+            function closeClearCartModal() {
+                document.getElementById('clearCartModal').style.display = 'none';
+            }
+
+            function confirmClearCart() {
+                document.getElementById('clearCartForm').submit();
+            }
+
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const messageModal = document.getElementById('messageModal');
+                const removeModal = document.getElementById('removeModal');
+                const clearCartModal = document.getElementById('clearCartModal');
+                
+                if (event.target == messageModal) {
+                    closeModal();
+                }
+                if (event.target == removeModal) {
+                    closeRemoveModal();
+                }
+                if (event.target == clearCartModal) {
+                    closeClearCartModal();
+                }
+            }
+        </script>
     </body>
 </html>
 <?php
