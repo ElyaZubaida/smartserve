@@ -269,6 +269,27 @@
                     closeErrorModal();
                 }
             }
+            
+            <?php if (count($orders) > 0): ?>
+                let latestOrderStatus = "<?php echo $orders[0]['order_status']; ?>";
+                const latestOrderId = "<?php echo $orders[0]['order_ID']; ?>";
+
+                function checkListUpdate() {
+                    fetch('check_status.php?order_id=' + latestOrderId)
+                        .then(response => response.text())
+                        .then(newStatus => {
+                            newStatus = newStatus.trim();
+                            if (newStatus !== latestOrderStatus) {
+                                // If the status of the newest order changed, refresh the whole list
+                                location.reload();
+                            }
+                        })
+                        .catch(err => console.log('Status Check Failed:', err));
+                }
+
+                // Check every 5 seconds
+                setInterval(checkListUpdate, 5000);
+            <?php endif; ?>
         </script>
     </body>
 </html>
