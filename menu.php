@@ -18,7 +18,9 @@
     $student_id = $_SESSION['student_id'];
 
     //fetch all menu items grouped by category
-    $menu_query = "SELECT menuID, menuName, menuPrice, menuImage, menuCategory, menuAvailability FROM menus ORDER BY menuCategory, menuName";
+    $menu_query = "SELECT menuID, menuName, menuDescription, menuPrice, menuImage, menuCategory, menuAvailability 
+               FROM menus 
+               ORDER BY menuCategory, menuName";
     $menu_result = $conn->query($menu_query);
 
     //group menu items by category
@@ -81,13 +83,27 @@
 
         <div class="category-wrapper">
             <section class="category-buttons">
-                <button onclick="scrollToCategory('rice')"><span class="material-symbols-outlined">rice_bowl</span> Rice</button>
-                <button onclick="scrollToCategory('noodles')"><span class="material-symbols-outlined">ramen_dining</span> Noodles</button>
-                <button onclick="scrollToCategory('soup')"><span class="material-symbols-outlined">soup_kitchen</span> Soup</button>
-                <button onclick="scrollToCategory('wrapnbuns')"><span class="material-symbols-outlined">bakery_dining</span> Wrap & Buns</button>
-                <button onclick="scrollToCategory('snacks')"><span class="material-symbols-outlined">fastfood</span> Snacks</button>
-                <button onclick="scrollToCategory('dessert')"><span class="material-symbols-outlined">icecream</span> Desserts</button>
-                <button onclick="scrollToCategory('drinks')"><span class="material-symbols-outlined">water_full</span> Drinks</button>
+                <button onclick="scrollToCategory('rice')">
+                    <span class="material-symbols-outlined">rice_bowl</span> Rice
+                </button>
+                <button onclick="scrollToCategory('noodles')">
+                    <span class="material-symbols-outlined">ramen_dining</span> Noodles
+                </button>
+                <button onclick="scrollToCategory('soup')">
+                    <span class="material-symbols-outlined">soup_kitchen</span> Soup
+                </button>
+                <button onclick="scrollToCategory('wrapnbuns')">
+                    <span class="material-symbols-outlined">bakery_dining</span> Wrap & Buns
+                </button>
+                <button onclick="scrollToCategory('snacks')">
+                    <span class="material-symbols-outlined">fastfood</span> Snacks
+                </button>
+                <button onclick="scrollToCategory('dessert')">
+                    <span class="material-symbols-outlined">icecream</span> Desserts
+                </button>
+                <button onclick="scrollToCategory('drinks')">
+                    <span class="material-symbols-outlined">water_full</span> Drinks
+                </button>
             </section>
         </div>
 
@@ -167,7 +183,14 @@
                                         alt="<?php echo htmlspecialchars($item['menuName']); ?>">
                                     <div class="item-info">
                                         <h3><?php echo htmlspecialchars($item['menuName']); ?></h3>
-                                        <span class="price">RM <?php echo number_format($item['menuPrice'], 2); ?></span>
+
+                                        <p class="menu-description">
+                                            <?php echo htmlspecialchars($item['menuDescription']); ?>
+                                        </p>
+
+                                        <span class="price">
+                                            RM <?php echo number_format($item['menuPrice'], 2); ?>
+                                        </span>
                                     </div>
                                 </a>
                             </div>
@@ -272,6 +295,18 @@
                     behavior: 'smooth'
                 });
             }
+
+            //sticky category buttons
+            const categoryBar = document.querySelector('.category-wrapper');
+            const stickyOffset = categoryBar.offsetTop;
+
+            window.addEventListener('scroll', () => {
+                if (window.pageYOffset > stickyOffset - 90) {
+                    categoryBar.classList.add('sticky');
+                } else {
+                    categoryBar.classList.remove('sticky');
+                }
+            });
         </script>
     </body>
 </html>
