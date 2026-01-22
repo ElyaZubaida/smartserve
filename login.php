@@ -1,40 +1,94 @@
 <!-- 
  Frontend: Elya 
- Backend: Qis 
+ Backend: Aleesya, Amirah 
  -->
 <?php
-session_start();
+    session_start();
+    include 'config/db_connect.php';
 
-// Check if the form has been submitted
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Fetch username and password from POST data
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    // Check if the form has been submitted
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $username = trim($_POST['username']);
+        $password = trim($_POST['password']);
+        $role = $_POST['role']; // 'student' or 'staff'
 
-    // Example of validating against static data (replace with database logic later)
-    $valid_users = [
-        'student1' => 'password123',  // Example student
-        'staff1' => 'staffpassword',  // Example staff
-    ];
-
-    // Check if the username exists and the password matches
-    if (isset($valid_users[$username]) && $valid_users[$username] == $password) {
-        // Store the username and role in session
-        $_SESSION['username'] = $username;
-        $_SESSION['role'] = (strpos($username, 'student') !== false) ? 'student' : 'staff';
-
-        // Redirect based on the user's role
-        if ($_SESSION['role'] == 'student') {
-            header('Location: menu.php'); // Redirect to student dashboard
+        if (empty($username) || empty($password)) {
+            $error_message = 'Please enter both username and password';
         } else {
-            header('Location: staff/dashboard.php'); // Redirect to staff dashboard
+            // ================= STUDENT LOGIN ================= //
+           if ($role == 'student') {
+                // FIXED: Changed 'student_name' to 'student_username'
+                // FIXED: Added 'AND is_deleted = 0'
+                $query = "SELECT student_ID, student_name, student_email, student_password FROM students WHERE (student_email = ? OR student_username = ?) AND is_deleted = 0";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("ss", $username, $username);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    $user = $result->fetch_assoc();
+                    
+                    // FIXED: Hybrid Password Check (MD5 for Alex, Bcrypt for Aleesya)
+                    $db_pass = $user['student_password'];
+                    $is_md5 = (md5($password) === $db_pass);
+                    $is_bcrypt = password_verify($password, $db_pass);
+
+                    if ($is_md5 || $is_bcrypt) {
+                        $_SESSION['student_id'] = $user['student_ID'];
+                        $_SESSION['student_name'] = $user['student_name'];
+                        $_SESSION['student_email'] = $user['student_email'];
+                        $_SESSION['role'] = 'student';
+
+                        header('Location: menu.php');
+                        exit();
+                    } else {
+                        $error_message = 'Invalid username or password';
+                    }
+                } else {
+                    $error_message = 'Invalid username or password';
+                }
+            }
+            // ================= STAFF LOGIN (FIXED) ================= //
+            else {
+                // Check email OR username, AND ensure account is not deleted
+                $query = "SELECT staffID, staffName, staffEmail, staffPassword FROM staff WHERE (staffEmail = ? OR staffUsername = ?) AND is_deleted = 0";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("ss", $username, $username);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    $user = $result->fetch_assoc();
+                    
+                    // --- HYBRID PASSWORD CHECK START ---
+                    $db_password = $user['staffPassword'];
+                    
+                    // 1. Check if password matches Plain Text (Old users like Sarah)
+                    $is_plain = ($password === $db_password);
+                    
+                    // 2. Check if password matches MD5 (New users like Mike)
+                    $is_md5 = (md5($password) === $db_password);
+
+                    // If EITHER is true, log them in
+                    if ($is_plain || $is_md5) {
+                        $_SESSION['staff_id'] = $user['staffID'];
+                        $_SESSION['staffID'] = $user['staffID']; // Setting both keys to be safe
+                        $_SESSION['staff_name'] = $user['staffName'];
+                        $_SESSION['staff_email'] = $user['staffEmail'];
+                        $_SESSION['role'] = 'staff';
+
+                        header('Location: staff/dashboard.php'); // Redirect to dashboard
+                        exit();
+                    } else {
+                        $error_message = 'Invalid username or password';
+                    }
+                    // --- HYBRID PASSWORD CHECK END ---
+                } else {
+                    $error_message = 'Invalid username or password';
+                }
+            }
         }
-        exit();
-    } else {
-        // If login fails, show an error message
-        $error_message = 'Invalid username or password';
     }
-}
 ?>
 
 <!DOCTYPE html>
@@ -44,14 +98,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Serve - Login</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="style.css"> <!-- Link to your external CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="login-page">
 
     <header>
         <div class="logo">
             <img src="img/logo.png" alt="Smart Serve Logo">
-            <h1>SmartServe</h1>
+            <h1>Smart<span>Serve</span></h1>
         </div>
         <hr>
     </header>
@@ -116,23 +170,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     const studentRadio = document.querySelector('input[value="student"]');
     const staffRadio = document.querySelector('input[value="staff"]');
     const signupSection = document.getElementById('signup-section');
-    // Get the Forgot Password container
     const forgotPasswordLink = document.querySelector('.forgot-password');
+    const usernameInput = document.getElementById('username');
 
     function toggleSignup() {
         if (staffRadio.checked) {
             signupSection.style.display = 'none';    // Hide Sign Up for Staff
-            forgotPasswordLink.style.display = 'none'; // Hide Forgot Password for Staff
+            forgotPasswordLink.style.display = 'block'; // Hide Forgot Password for Staff
+            usernameInput.placeholder = 'Email or Username';
         } else {
             signupSection.style.display = 'block';   // Show for Students
             forgotPasswordLink.style.display = 'block'; 
+            usernameInput.placeholder = 'Username';
         }
     }
 
     studentRadio.addEventListener('change', toggleSignup);
     staffRadio.addEventListener('change', toggleSignup);
 
-    toggleSignup(); // Run on load
+    toggleSignup(); 
 </script>
 </html>
-

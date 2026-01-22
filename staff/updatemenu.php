@@ -1,7 +1,169 @@
-<!-- 
- Frontend: Elya 
- Backend: Amirah
- -->
+<?php
+session_start();
+
+if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
+    header("Location: ../login.php");
+    exit;
+}
+
+// Check for the success flag immediately and clear it
+$showUpdateSuccess = false;
+if (isset($_SESSION['menu_updated'])) {
+    $showUpdateSuccess = true;
+    unset($_SESSION['menu_updated']);
+    unset($_SESSION['success_message']);
+}
+
+// Check for error message
+$showError = false;
+$errorMessage = '';
+if (isset($_SESSION['error_message'])) {
+    $showError = true;
+    $errorMessage = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+}
+
+// Include database connection
+include '../config/db_connect.php';
+
+// Check if menu ID is provided
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    $_SESSION['error_message'] = "No menu item selected.";
+    header("Location: menu_management.php");
+    exit();
+}
+
+$menu_id = mysqli_real_escape_string($conn, $_GET['id']);
+
+// Fetch existing menu item details
+$query = "SELECT * FROM `menus` WHERE `menuID` = '$menu_id' AND `is_deleted` = 0";
+$result = mysqli_query($conn, $query);
+if (!$result || mysqli_num_rows($result) == 0) {
+    $_SESSION['error_message'] = "Menu item not found or has been deleted.";
+    header("Location: menu_management.php");
+    exit();
+}
+
+$menu_item = mysqli_fetch_assoc($result);
+
+// Handle Update Form Submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Check if update or delete action
+    if (isset($_POST['update_menu'])) {
+        // Retrieve form data
+        $name = mysqli_real_escape_string($conn, $_POST['name']);
+        $description = mysqli_real_escape_string($conn, $_POST['description']);
+        $price = mysqli_real_escape_string($conn, $_POST['price']);
+        $menu_category = mysqli_real_escape_string($conn, $_POST['menuCategory']);
+        $food_type = mysqli_real_escape_string($conn, $_POST['foodType']);
+        $meal_type = mysqli_real_escape_string($conn, $_POST['mealType']);
+        $cuisine = mysqli_real_escape_string($conn, $_POST['cuisine']);
+        $flavour = mysqli_real_escape_string($conn, $_POST['flavour']);
+        $portion = mysqli_real_escape_string($conn, $_POST['portion']);
+        $availability = mysqli_real_escape_string($conn, $_POST['menuAvailability']);
+
+        // Handle file upload
+        $image_name = '';
+        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+            $target_dir = "../img/";
+            $original_filename = basename($_FILES['image']['name']);
+            $file_extension = strtolower(pathinfo($original_filename, PATHINFO_EXTENSION));
+            
+            // Generate unique filename
+            $image_name = uniqid('menu_') . '.' . $file_extension;
+            $target_file = $target_dir . $image_name;
+
+            // Move uploaded file
+            if (!move_uploaded_file($_FILES['image']['tmp_name'], $target_file)) {
+                $_SESSION['error_message'] = "Sorry, there was an error uploading your file.";
+                header("Location: updatemenu.php?id=" . $menu_id);
+                exit();
+            }
+        } else {
+            // Keep existing image if no new image uploaded
+            $image_query = "SELECT menuImage FROM `menus` WHERE menuID = '$menu_id'";
+            $image_result = mysqli_query($conn, $image_query);
+            $image_row = mysqli_fetch_assoc($image_result);
+            $image_name = $image_row['menuImage'];
+        }
+
+        // Prepare SQL update statement
+        $query = "UPDATE `menus` SET 
+            `menuName` = ?, 
+            `menuDescription` = ?, 
+            `menuPrice` = ?, 
+            `menuImage` = ?, 
+            `menuCategory` = ?,
+            `foodType` = ?,
+            `mealType` = ?,
+            `cuisine` = ?,
+            `flavour` = ?,
+            `portion` = ?,
+            `menuAvailability` = ?
+        WHERE `menuID` = ?";
+
+        $stmt = $conn->prepare($query);
+        $availability_int = ($availability == 'Available') ? 1 : 0;
+        $stmt->bind_param("ssdsssssssii", 
+            $name, 
+            $description, 
+            $price, 
+            $image_name, 
+            $menu_category,
+            $food_type,
+            $meal_type,
+            $cuisine,
+            $flavour,
+            $portion,
+            $availability_int,
+            $menu_id 
+        );
+
+        // Execute the statement
+        if ($stmt->execute()) {
+            $_SESSION['menu_updated'] = true;  // Set flag for modal
+            $_SESSION['success_message'] = "Menu item updated successfully!";
+            header("Location: updatemenu.php?id=" . $menu_id);
+            exit();
+        } else {
+            $_SESSION['error_message'] = "Error updating menu item: " . $stmt->error;
+            header("Location: updatemenu.php?id=" . $menu_id);
+            exit();
+        }
+    } 
+    // Handle Soft Delete
+    elseif (isset($_POST['delete_menu'])) {
+        // Soft delete query
+        $delete_query = "UPDATE `menus` SET `is_deleted` = 1 WHERE `menuID` = ?";
+        $stmt = $conn->prepare($delete_query);
+        $stmt->bind_param("i", $menu_id);
+
+        if ($stmt->execute()) {
+            $_SESSION['success_message'] = "Menu item soft deleted successfully!";
+            header("Location: menu_management.php");
+            exit();
+        } else {
+            $_SESSION['error_message'] = "Error deleting menu item: " . $stmt->error;
+            header("Location: updatemenu.php?id=" . $menu_id);
+            exit();
+        }
+    }
+}
+
+// Fetch existing menu item details
+$query = "SELECT * FROM `menus` WHERE `menuID` = '$menu_id'";
+$result = mysqli_query($conn, $query);
+
+if (!$result || mysqli_num_rows($result) == 0) {
+    $_SESSION['error_message'] = "Menu item not found.";
+    header("Location: menu_management.php");
+    exit();
+}
+
+$menu_item = mysqli_fetch_assoc($result);
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +174,6 @@
     <link rel="stylesheet" href="sastyle.css">
 </head>
 <body>
-
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-top">
@@ -23,8 +184,8 @@
 
             <nav class="sidebar-nav">
                 <ul>
-                    <li class="active"><a href="dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
-                    <li><a href="menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
+                    <li><a href="dashboard.php"><span class="material-symbols-outlined">dashboard</span> Dashboard</a></li>
+                    <li class="active"><a href="menu_management.php"><span class="material-symbols-outlined">restaurant_menu</span> Menu Management</a></li>
                     <li><a href="order_management.php"><span class="material-symbols-outlined">order_approve</span> Orders</a></li>
                     <li><a href="report.php"><span class="material-symbols-outlined">monitoring</span> Reports</a></li>
                     <li class="nav-divider"></li>
@@ -37,65 +198,231 @@
 
     <!-- Main Content -->
     <div class="main-content staff-menu-content">
-    <div class="staff-menu-header">
-        <div class="staff-menu-title">
+    <div class="header">
+        <div class="title">
             <h2>Update Menu Item</h2>
             <p>Modify food details or remove the item from the system</p>
         </div>
-        <a href="menu_management.php" class="staff-menu-add-btn" style="background-color: #666;">
+        <a href="menu_management.php" class="btn-back">
             <span class="material-symbols-outlined">arrow_back</span> Back to List
         </a>
     </div>
 
     <div class="update-form-container">
-        <form id="editForm" class="staff-update-form">
+        <form id="editForm" method="POST" enctype="multipart/form-data" class="staff-update-form">
             <div class="form-grid">
                 <div class="image-upload-section">
                     <div class="menu-item-image">
-                        <img id="menuItemImage" src="../img/nasilemak.jpg" alt="Nasi Lemak" class="menu-item-img">
+                        <img id="menuItemImage" 
+                             src="<?php 
+                                echo !empty($menu_item['menuImage']) 
+                                    ? '../img/' . htmlspecialchars($menu_item['menuImage']) 
+                                    : '../img/placeholder.jpg'; 
+                             ?>" 
+                             alt="<?php echo htmlspecialchars($menu_item['menuName']); ?>" 
+                             class="menu-item-img">
                     </div>
                     <label class="file-upload-label">
                         <span class="material-symbols-outlined">cloud_upload</span> Change Photo
-                        <input type="file" class="file-input">
+                        <input type="file" name="image" id="image" class="file-input" accept="image/*" onchange="previewImage(event)">
                     </label>
                 </div>
 
                 <div class="form-inputs">
                     <div class="input-group">
                         <label for="name">Food Name</label>
-                        <input type="text" id="name" name="name" value="Nasi Lemak" required>
+                        <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($menu_item['menuName']); ?>" required>
                     </div>
 
                     <div class="input-group">
                         <label for="description">Description</label>
-                        <textarea id="description" name="description" required>Yum yum yummy nasi lemak</textarea>
+                        <textarea id="description" name="description" required><?php echo htmlspecialchars($menu_item['menuDescription']); ?></textarea>
                     </div>
 
                     <div class="input-row">
                         <div class="input-group">
                             <label for="price">Price (RM)</label>
-                            <input type="text" id="price" name="price" value="5.00" required>
+                            <input type="number" step="0.01" id="price" name="price" value="<?php echo number_format($menu_item['menuPrice'], 2); ?>" required>
                         </div>
 
                         <div class="input-group">
+                            <label for="menu_category">Menu Category</label>
+                            <select id="menu_category" name="menuCategory" required>
+                                <option value="rice" <?php echo ($menu_item['menuCategory'] == 'rice') ? 'selected' : ''; ?>>Rice</option>
+                                <option value="noodles" <?php echo ($menu_item['menuCategory'] == 'noodles') ? 'selected' : ''; ?>>Noodles</option>
+                                <option value="soup" <?php echo ($menu_item['menuCategory'] == 'soup') ? 'selected' : ''; ?>>Soup</option>
+                                <option value="wrapnbuns" <?php echo ($menu_item['menuCategory'] == 'wrapnbuns') ? 'selected' : ''; ?>>Wrap & Buns</option>
+                                <option value="snacks" <?php echo ($menu_item['menuCategory'] == 'snacks') ? 'selected' : ''; ?>>Snacks</option>
+                                <option value="dessert" <?php echo ($menu_item['menuCategory'] == 'dessert') ? 'selected' : ''; ?>>Dessert</option>
+                                <option value="drinks" <?php echo ($menu_item['menuCategory'] == 'drinks') ? 'selected' : ''; ?>>Drinks</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="food_type">
+                                Food Type 
+                                <span class="tooltip-icon" title="Classify this meal based on a student's daily needs: Is it for staying healthy, fueling a long study session, a quick bite between classes, or a refreshing break?">
+                                    <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">info</span>
+                                </span>
+                            </label>
+                            <select id="food_type" name="foodType" required>
+                                <option value="healthy" <?php echo ($menu_item['foodType'] == 'healthy') ? 'selected' : ''; ?>>Healthy</option>
+                                <option value="energy-boosting" <?php echo ($menu_item['foodType'] == 'energy-boosting') ? 'selected' : ''; ?>>Energy Boosting</option>
+                                <option value="refreshing" <?php echo ($menu_item['foodType'] == 'refreshing') ? 'selected' : ''; ?>>Refreshing</option>
+                                <option value="fastneasy" <?php echo ($menu_item['foodType'] == 'fastneasy') ? 'selected' : ''; ?>>Fast & Easy</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="meal_type">Meal Type</label>
+                            <select id="meal_type" name="mealType" required>
+                                <option value="breakfast" <?php echo ($menu_item['mealType'] == 'breakfast') ? 'selected' : ''; ?>>Breakfast</option>
+                                <option value="lunch" <?php echo ($menu_item['mealType'] == 'lunch') ? 'selected' : ''; ?>>Lunch</option>
+                                <option value="dinner" <?php echo ($menu_item['mealType'] == 'dinner') ? 'selected' : ''; ?>>Dinner</option>
+                                <option value="anytime" <?php echo ($menu_item['mealType'] == 'anytime') ? 'selected' : ''; ?>>Anytime</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="cuisine">Cuisine</label>
+                            <select id="cuisine" name="cuisine" required>
+                                <option value="malay" <?php echo ($menu_item['cuisine'] == 'malay') ? 'selected' : ''; ?>>Malay</option>
+                                <option value="chinese" <?php echo ($menu_item['cuisine'] == 'chinese') ? 'selected' : ''; ?>>Chinese</option>
+                                <option value="indian" <?php echo ($menu_item['cuisine'] == 'indian') ? 'selected' : ''; ?>>Indian</option>
+                                <option value="western" <?php echo ($menu_item['cuisine'] == 'western') ? 'selected' : ''; ?>>Western</option>
+                                </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="flavour">Flavour</label>
+                            <select id="flavour" name="flavour" required>
+                                <option value="spicy" <?php echo ($menu_item['flavour'] == 'spicy') ? 'selected' : ''; ?>>Spicy</option>
+                                <option value="sweet" <?php echo ($menu_item['flavour'] == 'sweet') ? 'selected' : ''; ?>>Sweet</option>
+                                <option value="savoury" <?php echo ($menu_item['flavour'] == 'savoury') ? 'selected' : ''; ?>>Savoury</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="portion">Portion</label>
+                            <select id="portion" name="portion" required>
+                                <option value="light" <?php echo ($menu_item['portion'] == 'light') ? 'selected' : ''; ?>>Light (Snack)</option>
+                                <option value="regular" <?php echo ($menu_item['portion'] == 'regular') ? 'selected' : ''; ?>>Regular (Meal)</option>
+                                <option value="large" <?php echo ($menu_item['portion'] == 'large') ? 'selected' : ''; ?>>Large (High Hunger)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
                             <label for="availability">Availability Status</label>
-                            <select id="availability" name="availability">
-                                <option value="Available" selected>Available</option>
-                                <option value="Out of Stock">Out of Stock</option>
-                                <option value="N/A">N/A</option>
+                            <select id="availability" name="menuAvailability" required>
+                                <option value="Available" <?php echo ($menu_item['menuAvailability'] == 1) ? 'selected' : ''; ?>>Available</option>
+                                <option value="Out of Stock" <?php echo ($menu_item['menuAvailability'] == 0) ? 'selected' : ''; ?>>Out of Stock</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" id="updateBtn" class="update-confirm-btn">Save Changes</button>
-                        <button type="button" id="deleteBtn" class="delete-menu-btn">Delete Menu</button>
+                        <button type="submit" name="update_menu" class="update-confirm-btn">Save Changes</button>
+                            <button type="button" onclick="confirmDelete(<?php echo $menu_item['menuID']; ?>)" class="delete-menu-btn">Delete Menu</button>
+                            <script>
+                            function confirmDelete(menuId) {
+                                if (confirm('Are you sure you want to soft delete this menu item?')) {
+                                    window.location.href = 'a_deletemenu.php?id=' + menuId;
+                                }
+                            }
+                            </script>
                     </div>
                 </div>
             </div>
         </form>
     </div>
 </div>
-</body>
 
+<!-- Success Modal -->
+<div id="successModal" class="modal">
+    <div class="modal-content">
+        <span class="material-symbols-outlined">check_circle</span>
+        <h2>Menu Updated Successfully</h2>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="modal">
+    <div class="modal-content error">
+        <span class="material-symbols-outlined">error</span>
+        <h2 id="errorMessage">Error</h2>
+        <button class="close-btn" onclick="closeErrorModal()">Close</button>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var output = document.getElementById('menuItemImage');
+            output.src = reader.result;
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function showSuccessModal() {
+        document.getElementById('successModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('successModal').style.display = 'none';
+        window.location.href = 'menu_management.php';
+    }
+
+    function showErrorModal(message) {
+        document.getElementById('errorMessage').innerText = message;
+        document.getElementById('errorModal').style.display = 'flex';
+    }
+
+    function closeErrorModal() {
+        document.getElementById('errorModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside (with redirect for success modal)
+    window.onclick = function(event) {
+        const successModal = document.getElementById('successModal');
+        const errorModal = document.getElementById('errorModal');
+        if (event.target == successModal) {
+            successModal.style.display = 'none';
+            window.location.href = 'menu_management.php';
+        }
+        if (event.target == errorModal) {
+            errorModal.style.display = 'none';
+        }
+    }
+</script>
+
+<?php if ($showUpdateSuccess): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showSuccessModal();
+    });
+</script>
+<?php endif; ?>
+
+<?php if ($showError): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showErrorModal('<?php echo addslashes($errorMessage); ?>');
+    });
+</script>
+<?php endif; ?>
+
+</body>
 </html>
+
+<?php
+// Close database connection
+mysqli_close($conn);
+?>

@@ -1,46 +1,73 @@
 <?php
-// Database connection
-include('../databaseconnect.php');
+session_start();
 
-// Check connection
-if (!$connection) {
-    die('Database connection failed: ' . mysqli_connect_error());
+if (!isset($_SESSION['staff_id']) || $_SESSION['role'] !== 'staff') {
+    header("Location: ../login.php");
+    exit;
 }
 
-// Check if form submitted via POST
+include '../config/db_connect.php';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Get form data
-    $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
+    $order_id = isset($_POST['order_ID']) ? intval($_POST['order_ID']) : 0;
     $status = isset($_POST['status']) ? $_POST['status'] : '';
+    $staff_id = $_SESSION['staff_id'];
 
-    // Validate data
     if ($order_id == 0 || empty($status)) {
-        header("Location: order_details.php?id=" . $order_id . "&error=1");
+        $_SESSION['error_message'] = "Invalid order ID or status.";
+        header("Location: s_orderdetails.php?id=" . $order_id);
         exit;
     }
 
-    // Update order status in database
-    $query = "UPDATE orders SET status = ? WHERE order_id = ?";
-    $stmt = mysqli_prepare($connection, $query);
-    mysqli_stmt_bind_param($stmt, "si", $status, $order_id);
-    
-    if (mysqli_stmt_execute($stmt)) {
-        // Success - redirect back with success message
-        mysqli_stmt_close($stmt);
-        mysqli_close($connection);
-        header("Location: order_details.php?id=" . $order_id . "&success=1");
-        exit;
-    } else {
-        // Error - redirect back with error message
-        mysqli_stmt_close($stmt);
-        mysqli_close($connection);
-        header("Location: order_details.php?id=" . $order_id . "&error=1");
+    // Check current status - prevent changes if already Completed or Cancelled
+    $check_query = "SELECT order_status FROM orders WHERE order_ID = ?";
+    $check_stmt = $conn->prepare($check_query);
+    $check_stmt->bind_param("i", $order_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    $current_order = $check_result->fetch_assoc();
+    $check_stmt->close();
+
+    if ($current_order['order_status'] == 'Completed' || $current_order['order_status'] == 'Cancelled') {
+        $_SESSION['error_message'] = "This order is " . strtolower($current_order['order_status']) . " and cannot be changed.";
+        header("Location: s_orderdetails.php?id=" . $order_id);
         exit;
     }
+
+    // Allowed status values
+    $allowed_statuses = [
+        'Pending', 
+        'Preparing', 
+        'Ready for Pickup', 
+        'Completed', 
+        'Cancelled'
+    ];
+
+    if (!in_array($status, $allowed_statuses)) {
+        $_SESSION['error_message'] = "Invalid order status.";
+        header("Location: s_orderdetails.php?id=" . $order_id);
+        exit;
+    }
+
+    // Update order status AND staffID
+    $query = "UPDATE `orders` SET order_status = ?, staffID = ?, admin_ID = NULL WHERE order_ID = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("sii", $status, $staff_id, $order_id);
+    
+    if ($stmt->execute()) {
+        $_SESSION['order_status_updated'] = true;
+        $_SESSION['success_message'] = "Order status updated successfully.";
+    } else {
+        $_SESSION['error_message'] = "Failed to update order status.";
+    }
+    
+    $stmt->close();
+    $conn->close();
+    header("Location: s_orderdetails.php?id=" . $order_id);
+    exit;
+    
 } else {
-    // If someone tries to access this file directly (not via POST)
-    // Redirect to order management page
-    mysqli_close($connection);
+    $conn->close();
     header("Location: order_management.php");
     exit;
 }
