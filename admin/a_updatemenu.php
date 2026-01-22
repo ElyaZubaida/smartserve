@@ -6,6 +6,24 @@ if (!isset($_SESSION['admin_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: loginadmin.php");
     exit;
 }
+
+// Check for the success flag immediately and clear it
+$showUpdateSuccess = false;
+if (isset($_SESSION['menu_updated'])) {
+    $showUpdateSuccess = true;
+    unset($_SESSION['menu_updated']);
+    unset($_SESSION['success_message']);
+}
+
+// Check for error message
+$showError = false;
+$errorMessage = '';
+if (isset($_SESSION['error_message'])) {
+    $showError = true;
+    $errorMessage = $_SESSION['error_message'];
+    unset($_SESSION['error_message']);
+}
+
 // Include database connection
 include '../config/db_connect.php';
 
@@ -104,8 +122,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Execute the statement
         if ($stmt->execute()) {
+            $_SESSION['menu_updated'] = true;  // Set flag for modal
             $_SESSION['success_message'] = "Menu item updated successfully!";
-            header("Location: a_menu_management.php");
+            header("Location: a_updatemenu.php?id=" . $menu_id);
             exit();
         } else {
             $_SESSION['error_message'] = "Error updating menu item: " . $stmt->error;
@@ -326,6 +345,24 @@ $menu_item = mysqli_fetch_assoc($result);
     </div>
 </div>
 
+<!-- Success Modal -->
+<div id="successModal" class="modal">
+    <div class="modal-content">
+        <span class="material-symbols-outlined">check_circle</span>
+        <h2>Menu Updated Successfully</h2>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="modal">
+    <div class="modal-content error">
+        <span class="material-symbols-outlined">error</span>
+        <h2 id="errorMessage">Error</h2>
+        <button class="close-btn" onclick="closeErrorModal()">Close</button>
+    </div>
+</div>
+
 <script>
     function previewImage(event) {
         var reader = new FileReader();
@@ -335,7 +372,54 @@ $menu_item = mysqli_fetch_assoc($result);
         }
         reader.readAsDataURL(event.target.files[0]);
     }
+
+    function showSuccessModal() {
+        document.getElementById('successModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('successModal').style.display = 'none';
+        window.location.href = 'a_menu_management.php';
+    }
+
+    function showErrorModal(message) {
+        document.getElementById('errorMessage').innerText = message;
+        document.getElementById('errorModal').style.display = 'flex';
+    }
+
+    function closeErrorModal() {
+        document.getElementById('errorModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside (with redirect for success modal)
+    window.onclick = function(event) {
+        const successModal = document.getElementById('successModal');
+        const errorModal = document.getElementById('errorModal');
+        if (event.target == successModal) {
+            successModal.style.display = 'none';
+            window.location.href = 'a_menu_management.php';
+        }
+        if (event.target == errorModal) {
+            errorModal.style.display = 'none';
+        }
+    }
 </script>
+
+<?php if ($showUpdateSuccess): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showSuccessModal();
+    });
+</script>
+<?php endif; ?>
+
+<?php if ($showError): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showErrorModal('<?php echo addslashes($errorMessage); ?>');
+    });
+</script>
+<?php endif; ?>
 
 </body>
 </html>

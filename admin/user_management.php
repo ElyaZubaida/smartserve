@@ -11,28 +11,62 @@ include '../config/db_connect.php';
 
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Fetch all users from database
+// Get filter and search parameters
+$role_filter = isset($_GET['role']) ? $_GET['role'] : 'all';
+$search_query = isset($_GET['search']) ? $_GET['search'] : '';
+
+// Fetch all users from database based on filter
 $all_users = [];
 
-// Fetch admins (exclude soft-deleted)
-$admin_query = "SELECT admin_ID as id, admin_name as fullname, admin_username as username, admin_email as email, 'Admin' as role FROM admins WHERE is_deleted = 0 ORDER BY admin_ID";
-$admin_result = mysqli_query($conn, $admin_query);
-while ($row = mysqli_fetch_assoc($admin_result)) {
-    $all_users[] = $row;
+if ($role_filter == 'all' || $role_filter == 'admin') {
+    // Fetch admins (exclude soft-deleted)
+    $admin_query = "SELECT admin_ID as id, admin_name as fullname, admin_username as username, admin_email as email, 'Admin' as role FROM admins WHERE is_deleted = 0";
+    
+    // Add search filter for admins
+    if (!empty($search_query)) {
+        $search_escaped = mysqli_real_escape_string($conn, $search_query);
+        $admin_query .= " AND (admin_name LIKE '%$search_escaped%' OR admin_username LIKE '%$search_escaped%' OR admin_email LIKE '%$search_escaped%')";
+    }
+    
+    $admin_query .= " ORDER BY admin_ID";
+    $admin_result = mysqli_query($conn, $admin_query);
+    while ($row = mysqli_fetch_assoc($admin_result)) {
+        $all_users[] = $row;
+    }
 }
 
-// Fetch staff (exclude soft-deleted)
-$staff_query = "SELECT staffID as id, staffName as fullname, staffUsername as username, staffEmail as email, 'Staff' as role FROM staff WHERE is_deleted = 0 ORDER BY staffID";
-$staff_result = mysqli_query($conn, $staff_query);
-while ($row = mysqli_fetch_assoc($staff_result)) {
-    $all_users[] = $row;
+if ($role_filter == 'all' || $role_filter == 'staff') {
+    // Fetch staff (exclude soft-deleted)
+    $staff_query = "SELECT staffID as id, staffName as fullname, staffUsername as username, staffEmail as email, 'Staff' as role FROM staff WHERE is_deleted = 0";
+    
+    // Add search filter for staff
+    if (!empty($search_query)) {
+        $search_escaped = mysqli_real_escape_string($conn, $search_query);
+        $staff_query .= " AND (staffName LIKE '%$search_escaped%' OR staffUsername LIKE '%$search_escaped%' OR staffEmail LIKE '%$search_escaped%')";
+    }
+    
+    $staff_query .= " ORDER BY staffID";
+    $staff_result = mysqli_query($conn, $staff_query);
+    while ($row = mysqli_fetch_assoc($staff_result)) {
+        $all_users[] = $row;
+    }
 }
 
-// Fetch students (customers) (exclude soft-deleted)
-$student_query = "SELECT student_ID as id, student_name as fullname, student_username as username, student_email as email, 'Customer' as role FROM students WHERE is_deleted = 0 ORDER BY student_ID";
-$student_result = mysqli_query($conn, $student_query);
-while ($row = mysqli_fetch_assoc($student_result)) {
-    $all_users[] = $row;
+if ($role_filter == 'all' || $role_filter == 'customer') {
+    // Fetch students (customers) (exclude soft-deleted)
+    $student_query = "SELECT student_ID as id, student_name as fullname, student_username as username, student_email as email, 'Customer' as role FROM students WHERE is_deleted = 0";
+    
+    // Add search filter for students
+    if (!empty($search_query)) {
+        $search_escaped = mysqli_real_escape_string($conn, $search_query);
+        $student_query .= " AND (student_name LIKE '%$search_escaped%' OR student_username LIKE '%$search_escaped%' OR student_email LIKE '%$search_escaped%')";
+    }
+    
+    $student_query .= " ORDER BY student_ID";
+    $student_result = mysqli_query($conn, $student_query);
+    while ($row = mysqli_fetch_assoc($student_result)) {
+        $all_users[] = $row;
+    }
 }
 
 // Check for success message
@@ -108,7 +142,39 @@ if (isset($_SESSION['error_message'])) {
         </div>
         <?php endif; ?>
 
+        <!-- Filter and Search Bar -->
+        <div class="filter-search-wrapper">
+            <!-- Search Form (Full Width) -->
+            <form method="GET" action="user_management.php" class="search-form" id="searchForm">
+                <input type="hidden" name="role" value="<?php echo htmlspecialchars($role_filter); ?>">
+                <input 
+                    type="text" 
+                    name="search" 
+                    class="search-input" 
+                    id="searchInput"
+                    placeholder="Search by name, username, or email..." 
+                    value="<?php echo htmlspecialchars($search_query); ?>">
+                <button type="submit" class="search-btn">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">search</span>
+                    Search
+                </button>
+            </form>
+
+            <!-- Filter Row (Right-aligned) -->
+            <div class="filter-row">
+                <div class="category-filter">
+                    <select name="role" class="filter-select" onchange="window.location.href='user_management.php?role=' + this.value + '<?php echo !empty($search_query) ? '&search=' . urlencode($search_query) : ''; ?>'">
+                        <option value="all" <?php echo ($role_filter == 'all') ? 'selected' : ''; ?>>All Roles</option>
+                        <option value="admin" <?php echo ($role_filter == 'admin') ? 'selected' : ''; ?>>Admin</option>
+                        <option value="staff" <?php echo ($role_filter == 'staff') ? 'selected' : ''; ?>>Staff</option>
+                        <option value="customer" <?php echo ($role_filter == 'customer') ? 'selected' : ''; ?>>Customer</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <div class="report-table-container">
+            <?php if (count($all_users) > 0): ?>
             <table class="report-table">
                 <thead>
                     <tr>
@@ -151,47 +217,42 @@ if (isset($_SESSION['error_message'])) {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            <?php else: ?>
+                <div class="empty-state">
+                    <h3>No Users Found</h3>
+                    <p>
+                        <?php 
+                        if (!empty($search_query)) {
+                            echo 'No results found for "<strong>' . htmlspecialchars($search_query) . '</strong>"';
+                        } else if ($role_filter != 'all') {
+                            echo 'No users found with role: <strong>' . ucfirst(htmlspecialchars($role_filter)) . '</strong>';
+                        } else {
+                            echo 'There are currently no users to display.';
+                        }
+                        ?>
+                    </p>
+                    <?php if (!empty($search_query) || $role_filter != 'all'): ?>
+                        <a href="user_management.php" style="display: inline-block; margin-top: 10px; padding: 8px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Clear Filters</a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
-    <style>
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .role-badge {
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .role-admin {
-            background-color: #e3f2fd;
-            color: #1976d2;
-        }
-        .role-staff {
-            background-color: #fff3e0;
-            color: #f57c00;
-        }
-        .role-customer {
-            background-color: #e8f5e9;
-            color: #388e3c;
-        }
-    </style>
+    <script>
+        // Auto-search as user types
+        let searchTimeout;
+        const searchInput = document.getElementById('searchInput');
+        const searchForm = document.getElementById('searchForm');
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(function() {
+                searchForm.submit();
+            }, 500); // Wait 500ms after user stops typing
+        });
+    </script>
+
 </body>
 </html>
 

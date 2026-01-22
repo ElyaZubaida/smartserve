@@ -26,6 +26,11 @@ $menu_query = "SELECT COUNT(*) as total_menu FROM menus";
 $menu_result = mysqli_query($conn, $menu_query);
 $total_menu = mysqli_fetch_assoc($menu_result)['total_menu'] ?? 0;
 
+// Total Customers (Students only)
+$customers_query = "SELECT COUNT(*) as total_customers FROM students";
+$customers_result = mysqli_query($conn, $customers_query);
+$total_customers = mysqli_fetch_assoc($customers_result)['total_customers'] ?? 0;
+
 // New Orders (Pending orders today)
 $new_orders_query = "SELECT COUNT(*) as new_orders FROM orders WHERE DATE(order_date) = '$today' AND order_status = 'Pending'";
 $new_orders_result = mysqli_query($conn, $new_orders_query);
@@ -35,6 +40,11 @@ $new_orders = mysqli_fetch_assoc($new_orders_result)['new_orders'] ?? 0;
 $incomplete_query = "SELECT COUNT(*) as incomplete FROM orders WHERE order_status IN ('Pending', 'Preparing', 'Ready for Pickup')";
 $incomplete_result = mysqli_query($conn, $incomplete_query);
 $incomplete_orders = mysqli_fetch_assoc($incomplete_result)['incomplete'] ?? 0;
+
+// Completed Orders (All-time)
+$completed_query = "SELECT COUNT(*) as completed_orders FROM orders WHERE order_status = 'Completed'";
+$completed_result = mysqli_query($conn, $completed_query);
+$completed_orders = mysqli_fetch_assoc($completed_result)['completed_orders'] ?? 0;
 
 // Weekly Sales Data (Last 7 days)
 $weekly_sales = [];
@@ -148,6 +158,16 @@ if (empty($popular_labels)) {
                 </div>
             </div>
 
+            <div class="dash-stat-card users">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">group</span>
+                </div>
+                <div class="stat-details">
+                    <h3>Total Customers</h3>
+                    <div class="value"><?php echo $total_customers; ?></div>
+                </div>
+            </div>
+
             <div class="dash-stat-card orders">
                 <div class="stat-icon">
                     <span class="material-symbols-outlined">shopping_cart</span>
@@ -165,6 +185,16 @@ if (empty($popular_labels)) {
                 <div class="stat-details">
                     <h3>Incomplete</h3>
                     <div class="value"><?php echo $incomplete_orders; ?></div>
+                </div>
+            </div>
+
+            <div class="dash-stat-card completed">
+                <div class="stat-icon">
+                    <span class="material-symbols-outlined">task_alt</span>
+                </div>
+                <div class="stat-details">
+                    <h3>Completed Orders</h3>
+                    <div class="value"><?php echo $completed_orders; ?></div>
                 </div>
             </div>
         </div>
