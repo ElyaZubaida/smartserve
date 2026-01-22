@@ -92,6 +92,31 @@
     }
 
     $timeSlots = generateTimeSlots();
+
+    // Inside processorder.php
+    // Final Check: Is anything in this student's cart currently out of stock?
+    $check_query = "
+        SELECT m.menuName 
+        FROM cart_menu cm 
+        JOIN menus m ON cm.menuID = m.menuID 
+        JOIN carts c ON cm.cart_ID = c.cart_ID
+        WHERE c.student_ID = ? AND m.menuAvailability = 0";
+
+    $stmt = $conn->prepare($check_query);
+    $stmt->bind_param("i", $student_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $item = $result->fetch_assoc();
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Sorry, ' . $item['menuName'] . ' just went out of stock! Please remove it from your cart.'
+        ]);
+        exit();
+    }
+
+    // ... proceed to place order if check passes ...
 ?>
 
 <!DOCTYPE html>
@@ -132,7 +157,12 @@
                 </div>
                 <p>Please check your items before confirming</p>
             </div>
-
+            <div class="back-nav">
+                <a href="cart.php" class="back-link">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                    Back to Cart
+                </a>
+            </div>
             <div class="checkout-content">
                 <div class="order-summary-header">
                     <h3><span class="material-symbols-outlined">restaurant_menu</span> Your Selection</h3>

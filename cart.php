@@ -1,7 +1,3 @@
-<!-- 
- Frontend: Elya 
- Backend: Aleesya 
- -->
 <?php
     session_start();
     include 'config/db_connect.php';
@@ -23,23 +19,23 @@
         $new_qty = intval($_POST['quantity']);
         $request = isset($_POST['special_request']) ? trim($_POST['special_request']) : '';
         
-        if ($new_qty > 0) {
-            // Get menu price to calculate new subtotal
-            $price_query = "SELECT menuPrice FROM menus WHERE menuID = ?";
-            $stmt = $conn->prepare($price_query);
-            $stmt->bind_param("i", $menu_id);
-            $stmt->execute();
-            $price_result = $stmt->get_result();
-            $menu = $price_result->fetch_assoc();
-            $new_subtotal = $menu['menuPrice'] * $new_qty;
+        // --- START STOCK PROTECTION ADDITION ---
+        $check_stock = $conn->prepare("SELECT menuName, menuAvailability, menuPrice FROM menus WHERE menuID = ?");
+        $check_stock->bind_param("i", $menu_id);
+        $check_stock->execute();
+        $stock = $check_stock->get_result()->fetch_assoc();
+
+        if ($stock['menuAvailability'] == 0) {
+            $message = 'Unable to update: ' . $stock['menuName'] . ' is currently out of stock.';
+            $message_type = 'error';
+        } elseif ($new_qty > 0) {
+            $new_subtotal = $stock['menuPrice'] * $new_qty;
             
-            // Update cart_menu (including request)
             $update = "UPDATE cart_menu SET cm_quantity = ?, cm_subtotal = ?, cm_request = ? WHERE cart_ID = ? AND menuID = ?";
             $stmt = $conn->prepare($update);
             $stmt->bind_param("idssi", $new_qty, $new_subtotal, $request, $cart_id, $menu_id);
             
             if ($stmt->execute()) {
-                // Update cart total
                 $update_total = "UPDATE carts SET cart_totalPrice = (SELECT SUM(cm_subtotal) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
                 $stmt = $conn->prepare($update_total);
                 $stmt->bind_param("ii", $cart_id, $cart_id);
@@ -52,6 +48,7 @@
                 $message_type = 'error';
             }
         }
+        // --- END STOCK PROTECTION ADDITION ---
     } 
 
     // Handle item removal
@@ -59,13 +56,11 @@
         $cart_id = intval($_POST['cart_id']);
         $menu_id = intval($_POST['menu_id']);
         
-        // Delete from cart_menu
         $delete = "DELETE FROM cart_menu WHERE cart_ID = ? AND menuID = ?";
         $stmt = $conn->prepare($delete);
         $stmt->bind_param("ii", $cart_id, $menu_id);
         
         if ($stmt->execute()) {
-            // Update cart total
             $update_total = "UPDATE carts SET cart_totalPrice = (SELECT IFNULL(SUM(cm_subtotal), 0) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
             $stmt = $conn->prepare($update_total);
             $stmt->bind_param("ii", $cart_id, $cart_id);
@@ -83,13 +78,11 @@
     if (isset($_POST['clear_cart'])) {
         $cart_id = intval($_POST['cart_id']);
         
-        // Delete all items from cart_menu
         $delete_all = "DELETE FROM cart_menu WHERE cart_ID = ?";
         $stmt = $conn->prepare($delete_all);
         $stmt->bind_param("i", $cart_id);
         
         if ($stmt->execute()) {
-            // Update cart total to 0
             $update_total = "UPDATE carts SET cart_totalPrice = 0 WHERE cart_ID = ?";
             $stmt = $conn->prepare($update_total);
             $stmt->bind_param("i", $cart_id);
@@ -103,9 +96,9 @@
         }
     }
 
-    // Fetch cart items including request
+    // Fetch cart items including availability
     $cart_query = "SELECT carts.cart_ID, cart_menu.cm_quantity, cart_menu.menuID, cart_menu.cm_request,
-                          menus.menuName, menus.menuPrice, menus.menuImage
+                          menus.menuName, menus.menuPrice, menus.menuImage, menus.menuAvailability
                    FROM carts
                    JOIN cart_menu ON carts.cart_ID = cart_menu.cart_ID
                    JOIN menus ON cart_menu.menuID = menus.menuID
@@ -115,13 +108,15 @@
     $stmt->execute();
     $cart_items = $stmt->get_result();
 
-    // Calculate total
     $total = 0;
     $items_array = [];
     $cart_id_for_clear = null;
+    $has_out_of_stock = false; // Flag for checkout button
+
     while ($item = $cart_items->fetch_assoc()) {
         $total += $item['menuPrice'] * $item['cm_quantity'];
         $items_array[] = $item;
+        if ($item['menuAvailability'] == 0) $has_out_of_stock = true;
         if ($cart_id_for_clear === null) {
             $cart_id_for_clear = $item['cart_ID'];
         }
@@ -139,13 +134,11 @@
     </head>
 
     <body>
-        <!-- Navigation Bar -->
         <header>
             <div class="menubar">
                 <div class="logo">
                     <img src="img/logo.png" alt="Smart Serve Logo">
                 </div>
-
                 <nav>
                     <ul>
                         <li><a href="menu.php"><span class="material-symbols-outlined">home</span> Home</a></li>
@@ -159,7 +152,6 @@
             </div>
         </header>
 
-        <!-- Cart Section -->
         <div class="cart-container">
             <div class="section-header-box">
                 <div class="header-title-group">
@@ -183,11 +175,16 @@
                     <?php foreach ($items_array as $index => $item): 
                         $imgPath = $item['menuImage'];
                         if (strpos($imgPath, 'img/') === false) { $imgPath = 'img/' . $imgPath; }
+                        $is_out_of_stock = ($item['menuAvailability'] == 0);
                     ?>
-                        <div class="cart-card">
+                        <div class="cart-card <?php echo $is_out_of_stock ? 'out-of-stock-dim' : ''; ?>">
                             <div class="cart-card-img">  
                                 <img src="<?php echo htmlspecialchars($imgPath); ?>" 
+                                     onerror="this.src='img/default_food.png'" 
                                      alt="<?php echo htmlspecialchars($item['menuName']); ?>">  
+                                <?php if($is_out_of_stock): ?>
+                                    <div class="sold-out-tag">SOLD OUT</div>
+                                <?php endif; ?>
                             </div>
                             <div class="cart-card-info">
                                 <div class="info-top">
@@ -254,13 +251,19 @@
                             <span>RM <?php echo number_format($total, 2); ?></span>
                         </div>
                     </div>
-                    <a href="placeorder.php" class="place-order-btn-full">Confirm Order</a>
+                    <?php if($has_out_of_stock): ?>
+                        <p style="color: #d32f2f; font-size: 0.85rem; margin-top: 10px; font-weight: bold;">
+                            Some items are out of stock. Please remove them to proceed.
+                        </p>
+                        <button class="place-order-btn-full" style="background: #ccc; cursor: not-allowed;" disabled>Checkout Locked</button>
+                    <?php else: ?>
+                        <a href="placeorder.php" class="place-order-btn-full">Confirm Order</a>
+                    <?php endif; ?>
                 </aside>
                 <?php endif; ?>
             </section>
         </div>
 
-        <!-- Success/Error Modal -->
         <div id="messageModal" class="modal">
             <div class="modal-content">
                 <span class="material-symbols-outlined modal-icon <?php echo $message_type; ?>">
@@ -272,7 +275,6 @@
             </div>
         </div>
 
-        <!-- Remove Item Confirmation Modal -->
         <div id="removeModal" class="modal">
             <div class="modal-content">
                 <span class="material-symbols-outlined modal-icon error">warning</span>
@@ -285,7 +287,6 @@
             </div>
         </div>
 
-        <!-- Clear Cart Confirmation Modal -->
         <div id="clearCartModal" class="modal">
             <div class="modal-content">
                 <span class="material-symbols-outlined modal-icon error">delete_sweep</span>
@@ -298,13 +299,11 @@
             </div>
         </div>
 
-        <!-- Hidden form for clear cart -->
         <form id="clearCartForm" method="POST" style="display: none;">
             <input type="hidden" name="cart_id" value="<?php echo $cart_id_for_clear; ?>">
             <input type="hidden" name="clear_cart" value="1">
         </form>
 
-        <!-- Hidden form for remove item -->
         <form id="removeItemForm" method="POST" style="display: none;">
             <input type="hidden" name="cart_id" id="remove_cart_id">
             <input type="hidden" name="menu_id" id="remove_menu_id">
@@ -312,7 +311,6 @@
         </form>
 
         <script>
-            // Show message modal if there's a message
             <?php if (!empty($message)): ?>
             window.onload = function() {
                 document.getElementById('messageModal').style.display = 'block';
@@ -323,7 +321,6 @@
                 document.getElementById('messageModal').style.display = 'none';
             }
 
-            // Remove item confirmation
             let pendingCartId = null;
             let pendingMenuId = null;
 
@@ -335,8 +332,6 @@
 
             function closeRemoveModal() {
                 document.getElementById('removeModal').style.display = 'none';
-                pendingCartId = null;
-                pendingMenuId = null;
             }
 
             function confirmRemoveAction() {
@@ -347,7 +342,6 @@
                 }
             }
 
-            // Clear cart confirmation
             function showClearCartModal() {
                 document.getElementById('clearCartModal').style.display = 'block';
             }
@@ -360,20 +354,9 @@
                 document.getElementById('clearCartForm').submit();
             }
 
-            // Close modal when clicking outside
             window.onclick = function(event) {
-                const messageModal = document.getElementById('messageModal');
-                const removeModal = document.getElementById('removeModal');
-                const clearCartModal = document.getElementById('clearCartModal');
-                
-                if (event.target == messageModal) {
-                    closeModal();
-                }
-                if (event.target == removeModal) {
-                    closeRemoveModal();
-                }
-                if (event.target == clearCartModal) {
-                    closeClearCartModal();
+                if (event.target.className === 'modal') {
+                    event.target.style.display = 'none';
                 }
             }
         </script>

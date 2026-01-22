@@ -737,6 +737,7 @@ body.signup-page {
 
 .menu-item:hover .menu-description {
     -webkit-line-clamp: unset;
+    line-clamp: unset;
 }
 
 .menu-item img {
@@ -786,6 +787,7 @@ body.signup-page {
     /* Limit to 2 lines for clean cards */
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -1598,6 +1600,32 @@ body.signup-page {
 .btn-outline:hover {
     background: #2e7d32;
     color: white;
+}
+
+.cart-card-img {
+    position: relative;
+    overflow: hidden;
+}
+
+/* The SOLD OUT Label Styling */
+.sold-out-tag {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-10deg); /* Modern tilted look */
+    background-color: #d32f2f; /* Premium Red */
+    color: white;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border: 2px solid white;
+    border-radius: 4px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    white-space: nowrap;
+    pointer-events: none; /* Allows clicks to pass through if needed */
 }
 
 /* ============================
