@@ -89,6 +89,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <span class="material-icons">lock</span>
                         <input type="password" name="password" placeholder="Password" required>
                     </div>
+
+                    <div class="forgot-password">
+                        <a href="a_forgotpass.php">Forgot Password?</a>
+                    </div>
                     
                     <button type="submit" class="login-btn">Log In</button>
                 </form>
