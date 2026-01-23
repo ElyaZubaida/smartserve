@@ -3425,3 +3425,32 @@ body.signup-page {
 .menu-item.unavailable .menu-description {
     display: none;
 }
+
+/* Cart out-of-stock styling */
+.cart-card.out-of-stock {
+    opacity: 0.7;
+    border: 1px solid #ffcdd2;
+}
+
+.cart-card-img {
+    position: relative;
+}
+
+.cart-card-img .stock-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #d32f2f;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.place-order-btn-full:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

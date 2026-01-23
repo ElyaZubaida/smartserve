@@ -45,11 +45,19 @@
                 $stmt->bind_param("ii", $cart_id, $cart_id);
                 $stmt->execute();
                 
-                $message = 'Item updated successfully!';
-                $message_type = 'success';
-            } else {
-                $message = 'Failed to update item.';
-                $message_type = 'error';
+                if ($stmt->execute()) {
+                    // Update cart total
+                    $update_total = "UPDATE carts SET cart_totalPrice = (SELECT SUM(cm_subtotal) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
+                    $stmt = $conn->prepare($update_total);
+                    $stmt->bind_param("ii", $cart_id, $cart_id);
+                    $stmt->execute();
+                    
+                    $message = 'Item updated successfully!';
+                    $message_type = 'success';
+                } else {
+                    $message = 'Failed to update item.';
+                    $message_type = 'error';
+                }
             }
         }
     } 
@@ -128,6 +136,9 @@
 
         if ($cart_id_for_clear === null) {
             $cart_id_for_clear = $item['cart_ID'];
+        }
+        if (isset($item['menuAvailability']) && (int)$item['menuAvailability'] === 0) {
+            $has_out_of_stock = true;
         }
     }
 ?>
