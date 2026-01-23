@@ -1,8 +1,3 @@
-<!-- 
- Frontend: Elya 
- Backend: Aleesya 
- -->
-
 <?php
     session_start();
     date_default_timezone_set('Asia/Kuala_Lumpur');
@@ -32,13 +27,12 @@
     $order = $order_result->fetch_assoc();
 
     if (!$order) {
-        // Order not found or does not belong to this user
         header('Location: myorders.php');
         exit();
     }
 
-    // Fetch order items
-    $items_query = "SELECT om.*, m.menuName, m.menuPrice
+    // UPDATED QUERY: Added m.menuImage and om.om_request
+    $items_query = "SELECT om.*, m.menuName, m.menuPrice, m.menuImage
                     FROM order_menu om
                     JOIN menus m ON om.menuID = m.menuID
                     WHERE om.order_ID = ?";
@@ -55,27 +49,18 @@
     $pickup_time = date('h:i A', strtotime($order['pickup_time']));
     $order_date = date('d/m/Y', strtotime($order['order_date']));
 
-    // Format completed time (if order is completed)
     $completed_datetime = null;
-    if (
-        strtolower(trim($order['order_status'])) === 'completed'
-        && !empty($order['completed_date'])
-    ) {
-        $completed_datetime = date(
-            'd/m/Y, h:i A',
-            strtotime($order['completed_date'])
-        );
+    if (strtolower(trim($order['order_status'])) === 'completed' && !empty($order['completed_date'])) {
+        $completed_datetime = date('d/m/Y, h:i A', strtotime($order['completed_date']));
     }
 
-    // Handle pickup time (optional)
     if (!empty($order['pickup_time'])) {
         $pickup_time_display = date('h:i A', strtotime($order['pickup_time']));
     } else {
         $pickup_time_display = 'Immediately after ready';
     }
 
-    // Map order status to CSS class
-    $status_class = strtolower($order['order_status']); // e.g., pending, preparing, ready, completed
+    $status_class = strtolower($order['order_status']);
 ?>
 
 <!DOCTYPE html>
@@ -86,14 +71,18 @@
         <title>SmartServe - Order Details</title>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
         <link rel="stylesheet" href="style.css">
+        <style>
+            /* Minimal styles to support the new elements */
+            .item-with-img { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+            .item-img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+            .request-text { font-size: 0.85rem; color: #d32f2f; font-style: italic; display: block; margin-top: 2px; }
+            .summary-item { height: auto !important; padding: 10px 0; }
+        </style>
     </head>
     <body class="details-page">
         <header>
             <div class="menubar">
-                <div class="logo">
-                    <img src="img/logo.png" alt="Smart Serve Logo">
-                </div>
-
+                <div class="logo"><img src="img/logo.png" alt="Smart Serve Logo"></div>
                 <nav>
                     <ul>
                         <li><a href="menu.php"><span class="material-symbols-outlined">home</span> Home</a></li>
@@ -108,28 +97,23 @@
         </header>
 
         <div class="order-details-container">
-            <div class="checkout-title">
+            <div class="section-header-box">
+            <div class="header-title-group">
+                <span class="material-symbols-outlined pulse-icon">receipt_long</span>
                 <h1>Order Details</h1>
             </div>
-            <div class="back-nav">
-                <a href="myorders.php"><span class="material-symbols-outlined">arrow_back</span> My Orders</a>
-            </div>
+            <p>View the details of your order and track its progress.</p>
+        </div>
+            <div class="back-nav"><a href="myorders.php"><span class="material-symbols-outlined">arrow_back</span> My Orders</a></div>
 
             <div class="details-main-card">
                 <div class="details-header">
                     <div class="header-left">
                         <h1>Order #<?php echo htmlspecialchars($order['order_ID']); ?></h1>
                         <p>Placed on: <?php echo $order_date; ?></p>
-
-                        <?php if ($completed_datetime): ?>
-                            <p class="completed-info">
-                                Completed on: <?php echo $completed_datetime; ?>
-                            </p>
-                        <?php endif; ?>
+                        <?php if ($completed_datetime): ?><p class="completed-info">Completed on: <?php echo $completed_datetime; ?></p><?php endif; ?>
                     </div>
-                    <div class="status-badge <?php echo $status_class; ?>">
-                        <?php echo htmlspecialchars($order['order_status']); ?>
-                    </div>
+                    <div class="status-badge <?php echo $status_class; ?>"><?php echo htmlspecialchars($order['order_status']); ?></div>
                 </div>
 
                 <div class="order-tracker">
@@ -157,9 +141,20 @@
                     <div class="items-summary">
                         <h3>Items Ordered</h3>
                         <?php $total_paid = 0; ?>
-                        <?php foreach ($order_items as $item): ?>
+                        <?php foreach ($order_items as $item): 
+                            $imgPath = (strpos($item['menuImage'], 'img/') === false) ? 'img/' . $item['menuImage'] : $item['menuImage'];
+                        ?>
                             <div class="summary-item">
-                                <span><?php echo htmlspecialchars($item['menuName']); ?> x<?php echo $item['om_quantity']; ?></span>
+                                <div class="item-with-img">
+                                    <img src="<?php echo htmlspecialchars($imgPath); ?>" onerror="this.src='img/default_food.png'" class="item-img">
+                                    
+                                    <div>
+                                        <span><?php echo htmlspecialchars($item['menuName']); ?> x<?php echo $item['om_quantity']; ?></span>
+                                        <?php if(!empty($item['om_request'])): ?>
+                                            <span class="request-text">Note: "<?php echo htmlspecialchars($item['om_request']); ?>"</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                                 <span>RM <?php echo number_format($item['om_subtotal'], 2); ?></span>
                             </div>
                             <?php $total_paid += $item['om_subtotal']; ?>
@@ -175,21 +170,40 @@
                         <h3>Pickup Information</h3>
                         <div class="info-row">
                             <span class="material-symbols-outlined">schedule</span>
-                            <div>
-                                <strong>Pickup Time</strong>
-                                <p><?php echo $pickup_time_display; ?></p>
-                            </div>
+                            <div><strong>Pickup Time</strong><p><?php echo $pickup_time_display; ?></p></div>
                         </div>
                         <div class="info-row">
                             <span class="material-symbols-outlined">location_on</span>
-                            <div>
-                                <strong>Location</strong>
-                                <p>Dataran Cendekia</p>
-                            </div>
+                            <div><strong>Location</strong><p>Dataran Cendekia</p></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <script>
+    // 1. Get the current status from PHP
+    let currentStatus = "<?php echo $order['order_status']; ?>";
+    const orderId = "<?php echo $order_id; ?>";
+
+    function autoCheckStatus() {
+        // 2. Fetch the latest status from the database silently
+        fetch('check_status.php?order_id=' + orderId)
+            .then(response => response.text())
+            .then(latestStatus => {
+                latestStatus = latestStatus.trim();
+                
+                // 3. Compare: If the DB status is different from what we see on screen
+                if (latestStatus !== currentStatus) {
+                    console.log("Status updated to: " + latestStatus);
+                    // 4. Reload the page once to show the new status/tracker
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.log('Error checking status:', error));
+    }
+
+    // 5. Run this check every 5000 milliseconds (5 seconds)
+    setInterval(autoCheckStatus, 5000);
+</script>
     </body>
 </html>

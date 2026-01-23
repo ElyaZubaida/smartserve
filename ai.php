@@ -20,56 +20,48 @@ function is_selected($field, $value) {
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $url = 'http://127.0.0.1:5000/recommend';
-    
-    // Map PHP POST names to the keys Python expects
-    $data = [
-        'menu_category' => $_POST['menuCategory'] ?? '',
-        'food_type'     => $_POST['foodType'] ?? '',
-        'meal_type'     => $_POST['mealType'] ?? '',
-        'cuisine'       => $_POST['cuisine'] ?? '',
-        'flavour'       => $_POST['flavour'] ?? '',
-        'portion'       => $_POST['portion'] ?? '',
-        'budget'        => !empty($_POST['budget']) ? $_POST['budget'] : 999
-    ];
-
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $budget = $_POST['budget'] ?? '';
 
-    // 1. Validate Budget is numeric and positive
+    // 1. Validation
     if (!empty($budget) && (!is_numeric($budget) || $budget < 0)) {
         $error_message = "Please enter a valid positive budget amount.";
     } 
-    // 2. Ensure Category is selected (if you add a 'Select Category' placeholder)
     elseif (empty($_POST['menuCategory'])) {
         $error_message = "Please select a food category.";
     }
     else {
-        // ... proceed with curl_init and the AI request ...
-    }
-}
+        // Map PHP names to the 7 keywords Python expects
+        $data = [
+            'menu_category' => $_POST['menuCategory'] ?? '',
+            'food_type'     => $_POST['foodType'] ?? '',
+            'meal_type'     => $_POST['mealType'] ?? '',
+            'cuisine'       => $_POST['cuisine'] ?? '',
+            'flavour'       => $_POST['flavour'] ?? '',
+            'portion'       => $_POST['portion'] ?? '',
+            'budget'        => !empty($_POST['budget']) ? $_POST['budget'] : 999
+        ];
 
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Increased timeout to avoid errors
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    
-    if (curl_errno($ch)) {
-        $error_message = "AI Service is offline. Please start your Python script. Error: " . curl_error($ch);
-    } elseif ($http_code !== 200) {
-        $error_message = "AI Server Error (Code: $http_code). Check Python terminal.";
-    } else {
-        $foods = json_decode($response, true);
-        if ($foods === null) {
-            $error_message = "Failed to decode AI recommendations response.";
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        if (curl_errno($ch)) {
+            $error_message = "AI Service is offline. Please start your Python script.";
+        } elseif ($http_code !== 200) {
+            $error_message = "AI Server Error (Code: $http_code).";
+        } else {
+            $foods = json_decode($response, true);
         }
+        curl_close($ch);
     }
-    curl_close($ch);
 }
 
+// Simple ping to check if AI is online
 $ai_online = false;
 $fp = @fsockopen("127.0.0.1", 5000, $errno, $errstr, 1);
 if ($fp) {
@@ -86,6 +78,22 @@ if ($fp) {
     <title>SmartServe - AI Food Recommendation</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Modern Alert Banner for Partial Matches */
+        .ai-status-banner {
+            background: #e8f5e9;
+            border-left: 6px solid #2e7d32;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .ai-status-banner p { margin: 0; font-size: 1.05rem; color: #1b5e20; }
+        .ai-status-banner strong { color: #2e7d32; }
+    </style>
 </head>
 <body class="ai-page">
     <header>
@@ -94,7 +102,7 @@ if ($fp) {
             <nav>
                 <ul>
                     <li><a href="menu.php"><span class="material-symbols-outlined">home</span> Home</a></li>
-                    <li><a href="ai.php" class="active"><span class="material-symbols-outlined">psychology</span>Food Recommendation</a></li>
+                    <li><a href="ai.php" class="active"><span class="material-symbols-outlined">psychology</span> Food Recommendation</a></li>
                     <li><a href="myorders.php"><span class="material-symbols-outlined">receipt_long</span> Orders</a></li>
                     <li><a href="cart.php"><span class="material-symbols-outlined">shopping_cart</span> Cart</a></li>
                     <li><a href="profile.php"><span class="material-symbols-outlined">account_circle</span> Profile</a></li>
@@ -110,8 +118,9 @@ if ($fp) {
                 <span class="material-symbols-outlined pulse-icon">psychology</span>
                 <h1>AI Food Recommendation</h1>
             </div>
-            <p>Smart recommendations based on your unique taste.</p>
+            <p>Don't know what to eat? Let our AI suggest the perfect dish for you!</p>
         </div>
+
         <form method="POST" class="ai-recommendation-form">
             <div class="ai-form-grid">
                 <div class="form-group">
@@ -122,7 +131,6 @@ if ($fp) {
                         <option value="soup" <?php echo is_selected('menuCategory', 'soup'); ?>>Soup</option>
                         <option value="wrapnbuns" <?php echo is_selected('menuCategory', 'wrapnbuns'); ?>>Wrap & Buns</option>
                         <option value="snacks" <?php echo is_selected('menuCategory', 'snacks'); ?>>Snacks</option>
-                        <option value="dessert" <?php echo is_selected('menuCategory', 'dessert'); ?>>Dessert</option>
                         <option value="drinks" <?php echo is_selected('menuCategory', 'drinks'); ?>>Drinks</option>
                     </select>
                 </div>
@@ -177,62 +185,60 @@ if ($fp) {
 
                 <div class="form-group" style="grid-column: 1 / -1;">
                     <label><span class="material-symbols-outlined">payments</span> Max Budget (RM)</label>
-                    <input type="number" name="budget" placeholder="Enter your max budget (e.g. 15.00)" step="0.01" min="0" oninput="validity.valid||(value='');" value="<?php echo isset($_POST['budget']) ? htmlspecialchars($_POST['budget']) : ''; ?>">
+                    <input type="number" name="budget" placeholder="Enter budget (e.g. 15.00)" step="0.01" value="<?php echo isset($_POST['budget']) ? htmlspecialchars($_POST['budget']) : ''; ?>">
                 </div>
             </div>
+            
             <div style="display: flex; gap: 15px;">
                 <button type="submit" class="ai-btn" style="flex: 3.5;">Recommend Me <span class="material-symbols-outlined">bolt</span></button>
-                <a href="ai.php" class="ai-btn" style="flex: 0.5; background: #f4f4f4; color: #666; text-decoration: none;">Reset <span class="material-symbols-outlined">restart_alt</span></a>
+                <a href="ai.php" class="ai-btn" style="flex: 0.5; background: #f4f4f4; color: #666; text-decoration: none; display: flex; align-items: center; justify-content: center;">Reset</a>
             </div>
         </form>
 
-        <hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
-
         <?php if ($error_message): ?>
-            <div class="error-box">
-                <span class="material-symbols-outlined">error</span> 
-                <?php echo $error_message; ?>
+            <div class="error-box" style="margin-top: 20px;">
+                <span class="material-symbols-outlined">error</span> <?php echo $error_message; ?>
             </div>
         <?php endif; ?>
 
         <?php if (!empty($foods)): ?>
-            <div class="results-wrapper">
-                <?php $is_fallback = isset($foods[0]['match_type']) && $foods[0]['match_type'] === 'fallback'; ?>
-
-                <?php if ($is_fallback): ?>
-                    <div class="ai-apology-box" style="text-align: center; margin: 20px 0; padding: 25px; background: #fff5f5; border-radius: 12px; border: 1px solid #ffcccc;">
-                        <span class="material-symbols-outlined" style="font-size: 48px; color: #e53935; margin-bottom: 10px;">sentiment_dissatisfied</span>
-                        <h3 style="color: #333;">Sorry, nothing matched your preferences perfectly (70% Threshold).</h3>
-                        <p style="color: #666;">Showing our most popular items instead!</p>
-                    </div>
-                <?php else: ?>
-                    <h2 class="results-title"><span class="material-symbols-outlined">verified</span> AI Top Recommendations</h2>
-                <?php endif; ?>
+            <div class="results-wrapper" style="margin-top: 40px;">
+                
+                <div class="ai-status-banner">
+                    <span class="material-symbols-outlined">psychology</span>
+                    <p>
+                        <?php 
+                        $status = $foods[0]['match_percentage'];
+                        if (is_numeric($status)) {
+                            echo "We found a <strong>" . $status . "% match</strong> for your exact craving!";
+                        } else {
+                            // Display the "Next best match" text (e.g. "We found some Noodles for you")
+                            echo "No exact match found, but <strong>" . htmlspecialchars($status) . "</strong>";
+                        }
+                        ?>
+                    </p>
+                </div>
 
                 <div class="menu-grid">
                     <?php foreach ($foods as $food): 
                         $m_id    = $food['menuID'] ?? 0;
-                        $m_name  = $food['name'] ?? $food['menuName'] ?? 'Unknown Item';
-                        $m_price = $food['price'] ?? $food['menuPrice'] ?? 0.00;
+                        $m_name  = $food['name'] ?? 'Unknown Item';
+                        $m_price = $food['price'] ?? 0.00;
                         $m_img   = $food['menuImage'] ?? 'default.png';
-                        $m_desc  = $food['menuDescription'] ?? 'Freshly prepared SmartServe meal.';
-                        $m_match = $food['match_percentage'] ?? 0;
-
+                        $m_match = $food['match_percentage'];
                         $imgPath = (strpos($m_img, 'img/') === false) ? 'img/' . $m_img : $m_img;
                     ?>
                         <a href="menudetails.php?id=<?php echo $m_id; ?>" class="ai-card-link">
                             <div class="menu-item ai-card">
-                                <div class="match-badge" style="<?php echo ($is_fallback || $m_match < 1) ? 'background: #ffa000;' : ''; ?>">
+                                <div class="match-badge" style="<?php echo !is_numeric($m_match) ? 'background: #ffa000;' : ''; ?>">
                                     <span class="material-symbols-outlined">star_rate</span>
-                                    <?php echo ($is_fallback || $m_match < 1) ? "Popular" : htmlspecialchars($m_match) . "% Match"; ?>
+                                    <?php echo is_numeric($m_match) ? $m_match . "% Match" : "Recommended"; ?>
                                 </div>
                                  
-                                <img src="<?php echo htmlspecialchars($imgPath); ?>" onerror="this.src='img/default_food.png'" class="food-img" alt="Food">
+                                <img src="<?php echo htmlspecialchars($imgPath); ?>" onerror="this.src='img/default_food.png'" class="food-img">
                                  
                                 <div class="item-info">
                                     <h3><?php echo htmlspecialchars($m_name); ?></h3>
-                                    <p class="food-desc"><?php echo htmlspecialchars(strlen($m_desc) > 80 ? substr($m_desc, 0, 77) . '...' : $m_desc); ?></p>
-
                                     <div class="card-footer">
                                         <span class="price">RM <?php echo number_format($m_price, 2); ?></span>
                                     </div>
@@ -242,15 +248,7 @@ if ($fp) {
                     <?php endforeach; ?>
                 </div>
             </div>
-
-        <?php elseif ($_SERVER['REQUEST_METHOD'] !== 'POST' && !$error_message): ?>
-            <div class="empty-state-container" style="text-align: center; padding: 60px 20px;">
-                <span class="material-symbols-outlined" style="font-size: 80px; color: #eee; margin-bottom: 20px;">robot_2</span>
-                <h3 style="color: #aaa;">The AI Engine is Waiting</h3>
-                <p style="color: #bbb;">Fill out the preferences above to see your personalized recommendations!</p>
-            </div>
         <?php endif; ?>
     </div>
 </body>
 </html>
-                     
