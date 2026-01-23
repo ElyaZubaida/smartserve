@@ -25,31 +25,36 @@
         
         if ($new_qty > 0) {
             // Get menu price to calculate new subtotal
-            $price_query = "SELECT menuPrice FROM menus WHERE menuID = ?";
+            $price_query = "SELECT menuPrice, menuAvailability FROM menus WHERE menuID = ?";
             $stmt = $conn->prepare($price_query);
             $stmt->bind_param("i", $menu_id);
             $stmt->execute();
             $price_result = $stmt->get_result();
             $menu = $price_result->fetch_assoc();
-            $new_subtotal = $menu['menuPrice'] * $new_qty;
-            
-            // Update cart_menu (including request)
-            $update = "UPDATE cart_menu SET cm_quantity = ?, cm_subtotal = ?, cm_request = ? WHERE cart_ID = ? AND menuID = ?";
-            $stmt = $conn->prepare($update);
-            $stmt->bind_param("idssi", $new_qty, $new_subtotal, $request, $cart_id, $menu_id);
-            
-            if ($stmt->execute()) {
-                // Update cart total
-                $update_total = "UPDATE carts SET cart_totalPrice = (SELECT SUM(cm_subtotal) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
-                $stmt = $conn->prepare($update_total);
-                $stmt->bind_param("ii", $cart_id, $cart_id);
-                $stmt->execute();
-                
-                $message = 'Item updated successfully!';
-                $message_type = 'success';
-            } else {
-                $message = 'Failed to update item.';
+            if (!$menu || (int)$menu['menuAvailability'] === 0) {
+                $message = 'This item is currently out of stock. Please remove it from your cart.';
                 $message_type = 'error';
+            } else {
+                $new_subtotal = $menu['menuPrice'] * $new_qty;
+            
+                // Update cart_menu (including request)
+                $update = "UPDATE cart_menu SET cm_quantity = ?, cm_subtotal = ?, cm_request = ? WHERE cart_ID = ? AND menuID = ?";
+                $stmt = $conn->prepare($update);
+                $stmt->bind_param("idssi", $new_qty, $new_subtotal, $request, $cart_id, $menu_id);
+                
+                if ($stmt->execute()) {
+                    // Update cart total
+                    $update_total = "UPDATE carts SET cart_totalPrice = (SELECT SUM(cm_subtotal) FROM cart_menu WHERE cart_ID = ?) WHERE cart_ID = ?";
+                    $stmt = $conn->prepare($update_total);
+                    $stmt->bind_param("ii", $cart_id, $cart_id);
+                    $stmt->execute();
+                    
+                    $message = 'Item updated successfully!';
+                    $message_type = 'success';
+                } else {
+                    $message = 'Failed to update item.';
+                    $message_type = 'error';
+                }
             }
         }
     } 
@@ -105,7 +110,7 @@
 
     // Fetch cart items including request
     $cart_query = "SELECT carts.cart_ID, cart_menu.cm_quantity, cart_menu.menuID, cart_menu.cm_request,
-                          menus.menuName, menus.menuPrice, menus.menuImage
+                          menus.menuName, menus.menuPrice, menus.menuImage, menus.menuAvailability
                    FROM carts
                    JOIN cart_menu ON carts.cart_ID = cart_menu.cart_ID
                    JOIN menus ON cart_menu.menuID = menus.menuID
@@ -119,11 +124,15 @@
     $total = 0;
     $items_array = [];
     $cart_id_for_clear = null;
+    $has_out_of_stock = false;
     while ($item = $cart_items->fetch_assoc()) {
         $total += $item['menuPrice'] * $item['cm_quantity'];
         $items_array[] = $item;
         if ($cart_id_for_clear === null) {
             $cart_id_for_clear = $item['cart_ID'];
+        }
+        if (isset($item['menuAvailability']) && (int)$item['menuAvailability'] === 0) {
+            $has_out_of_stock = true;
         }
     }
 ?>
@@ -183,11 +192,15 @@
                     <?php foreach ($items_array as $index => $item): 
                         $imgPath = $item['menuImage'];
                         if (strpos($imgPath, 'img/') === false) { $imgPath = 'img/' . $imgPath; }
+                        $is_out_of_stock = (isset($item['menuAvailability']) && (int)$item['menuAvailability'] === 0);
                     ?>
-                        <div class="cart-card">
+                        <div class="cart-card <?php echo $is_out_of_stock ? 'out-of-stock' : ''; ?>">
                             <div class="cart-card-img">  
                                 <img src="<?php echo htmlspecialchars($imgPath); ?>" 
                                      alt="<?php echo htmlspecialchars($item['menuName']); ?>">  
+                                <?php if ($is_out_of_stock): ?>
+                                    <span class="stock-badge">Out of Stock</span>
+                                <?php endif; ?>
                             </div>
                             <div class="cart-card-info">
                                 <div class="info-top">
@@ -212,11 +225,12 @@
                                                 value="<?php echo $item['cm_quantity']; ?>" 
                                                 min="1" 
                                                 max="99"
+                                                <?php echo $is_out_of_stock ? 'disabled' : ''; ?>
                                                 style="width: 60px; height: 36px;">
 
                                             <input type="hidden" name="cart_id" value="<?php echo $item['cart_ID']; ?>">
                                             <input type="hidden" name="menu_id" value="<?php echo $item['menuID']; ?>">
-                                            <button type="submit" name="update_qty" class="btn-update-qty" style="height: 36px;">Update</button>
+                                            <button type="submit" name="update_qty" class="btn-update-qty" style="height: 36px;" <?php echo $is_out_of_stock ? 'disabled' : ''; ?>>Update</button>
                                         </div>
                                     </form>
 
@@ -254,7 +268,14 @@
                             <span>RM <?php echo number_format($total, 2); ?></span>
                         </div>
                     </div>
-                    <a href="placeorder.php" class="place-order-btn-full">Confirm Order</a>
+                    <?php if ($has_out_of_stock): ?>
+                        <p style="margin: 12px 0; color: #c62828; font-size: 13px;">
+                            Some items are out of stock. Remove them to continue.
+                        </p>
+                        <button class="place-order-btn-full" disabled>Confirm Order</button>
+                    <?php else: ?>
+                        <a href="placeorder.php" class="place-order-btn-full">Confirm Order</a>
+                    <?php endif; ?>
                 </aside>
                 <?php endif; ?>
             </section>
