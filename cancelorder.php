@@ -94,12 +94,14 @@
         exit();
     }
 
-    // Cancel the order
-    $cancel_query = "UPDATE orders SET order_status = 'Cancelled' WHERE order_ID = ?";
+    // Cancel the order (force status to Cancelled for this student)
+    $cancel_query = "UPDATE orders
+                     SET order_status = 'Cancelled', staffID = NULL, admin_ID = NULL, updated_at = NOW()
+                     WHERE order_ID = ? AND student_ID = ?";
     $cancel_stmt = $conn->prepare($cancel_query);
-    $cancel_stmt->bind_param("i", $order_id);
+    $cancel_stmt->bind_param("ii", $order_id, $student_id);
 
-    if ($cancel_stmt->execute()) {
+    if ($cancel_stmt->execute() && $cancel_stmt->affected_rows > 0) {
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
             header('Content-Type: application/json');
             echo json_encode(['success' => true, 'message' => 'Order cancelled successfully']);
