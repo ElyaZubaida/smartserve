@@ -84,6 +84,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .field-label { display: block; text-align: left; font-size: 0.85em; font-weight: 600; color: #2e7d32; margin-bottom: 6px; }
+        body.signup-page { padding-top: 320px; }
+        .signup-container { margin-top: 40px; }
+        body.signup-page header {
+            position: sticky;
+            top: 0;
+            background-color: #f0f4f0;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body class="signup-page">
