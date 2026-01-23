@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .msg-box { padding: 12px; margin-bottom: 20px; border-radius: 5px; font-size: 0.9em; text-align: center; }
         .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .field-label { display: block; text-align: left; font-size: 0.85em; font-weight: 600; color: #2e7d32; margin-bottom: 6px; }
     </style>
 </head>
 <body class="signup-page">
@@ -108,16 +109,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <form action="" method="POST">
             <div class="signup-field">
-                <input type="text" name="name" placeholder="NAME" value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>" required>
+                <label class="field-label" for="signup-name">Name</label>
+                <input type="text" id="signup-name" name="name" placeholder="e.g., Aina Binti Ahmad" value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>" required>
             </div>
             <div class="signup-field">
-                <input type="email" name="email" placeholder="EMAIL" value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required>
+                <label class="field-label" for="signup-email">Email</label>
+                <input type="email" id="signup-email" name="email" placeholder="e.g., aina@example.com" value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required>
             </div>
             <div class="signup-field">
-                <input type="text" name="username" placeholder="USERNAME" value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>" required>
+                <label class="field-label" for="signup-username">Username</label>
+                <input type="text" id="signup-username" name="username" placeholder="e.g., aina123" value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>" required>
             </div>
             <div class="signup-field">
-                <input type="password" name="password" placeholder="PASSWORD" required>
+                <label class="field-label" for="signup-password">Password</label>
+                <input type="password" id="signup-password" name="password" placeholder="e.g., at least 6 characters" required>
             </div>
             <button type="submit" class="signup-btn">SIGN UP</button>
         </form>
